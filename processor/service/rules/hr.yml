@@ -1,0 +1,540 @@
+version: 1
+language: hr
+# See en.yml for the pack-wide policy and cs.yml for how a Slavic pack is built.
+# sl.yml is the sister file: Slovene and Croatian share most of this vocabulary
+# and the two were written against each other. Four notes, and the first is the
+# reason this pack is the most conservative of the four.
+#
+# **hr_HR.dic is 53,557 stems.** Polish has 302,100, Czech 256,943, Slovene
+# 244,882. The dictionary sweep is the gate that says whether a pattern reaches
+# ordinary vocabulary, and on Croatian that gate is roughly a fifth as strong as
+# it is on the others. Nothing here is fuzzy, more of the pack sits at review
+# tier than in pl.yml or sk.yml, and where a term had any reading at all it went
+# to review rather than being argued about.
+#
+# **`ć` and `č` both fold to `c`.** So does `š` to `s` and `ž` to `z`, but `đ`
+# has no decomposition at all and survives NFKD unchanged. That means a term
+# carrying `đ` needs its `d` and `dj` spellings listed by hand -- the twin test
+# will not ask for them -- which is why `dođi` ships as `dođi`, `dodi` and
+# `dodji`.
+#
+# **`zid` is a wall, and `žid` de-accents onto it.** `zidove`, `zidovi`,
+# `zidovima` and `zidar` are all ordinary Croatian. No rule here contains a bare
+# žid-derived token; the antisemitic rule uses phrases of three tokens, where the
+# collision cannot be reached.
+#
+# **`crnac` and `crnkinja` are the neutral words and are not listed anywhere.**
+# The slur forms `crnčuga` and `crnjo` are, and `peder` is `exact` for the reason
+# sl.yml gives: one vowel makes it `puder`, face powder, a headword in four of
+# the five dictionaries this group is checked against.
+#
+# Native review still outstanding on: the register of `četnik`, `ustaša` and
+# `balija`, which all carry a legitimate historical reading and are all also used
+# as ethnic abuse -- they are review tier here and a Croatian moderator should
+# decide whether that is right -- and on the antisemitic phrasing.
+allow:
+  # `ubij se` is also how a Croatian player says "die so you respawn at the bed".
+  # The phrase is the most valuable harassment term in the pack, so the game
+  # reading is carved out rather than the rule weakened. `ubij se` alone still
+  # flags.
+  #
+  # The Slovene `in` is carved out alongside the Croatian `i`, and sl.yml does
+  # the reverse. `ubij se` is the same string in both languages, so a Slovene
+  # player misrouted to this pack said the game sentence and got a severity-3
+  # harassment mute -- found by running each pack against the other's benign
+  # corpus. One conjunction is the whole difference between the two phrasings.
+  - ubij se i respawnaj
+  - ubij se in respawnaj
+  - ubij se da se respawnaš
+  - ubij se da se respawnas
+  - ubij se pa se respawnaj
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: hr.spam.server-ad
+    term: dođi na moj server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - dodi na moj server
+      - dodji na moj server
+      - upadni na moj server
+      - pridruži se mom serveru
+      - pridruzi se mom serveru
+      - moj ip je
+      - ip mog servera je
+    context_required: false
+  - id: hr.spam.community-ad
+    term: pridruži se mom discordu
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - pridruzi se mom discordu
+      - dođi na moj discord
+      - dodi na moj discord
+      - dodji na moj discord
+    context_required: true
+  - id: hr.spam.free-items
+    term: besplatni dijamanti
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - dijamanti besplatno
+      - besplatni rankovi
+      - besplatan rank
+      - klikni na link
+      - klikni na moj link
+    context_required: true
+  - id: hr.spam.self-promo
+    term: pretplati se na moj kanal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - pretplati se na kanal
+      - pogledaj moj kanal
+      - pogledaj moj youtube
+      - daj sub
+      - ostavi sub
+      - prati me na twitchu
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `exact`, not fuzzy. `peder` is five characters, the fuzzy budget at five is
+  # one differing run, and one vowel turns it into `puder` -- face powder, and a
+  # headword in the Polish, Slovak, Slovene and Croatian dictionaries.
+  - id: hr.hate.homophobic
+    term: peder
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pederi
+      - pedera
+      - pederu
+      - pederom
+      - pedere
+      - pederčina
+      - pedercina
+      - pederu jedan
+      - pederko
+    context_required: false
+  # The traditional ethnonym, a surname, and the stem of `ciganiti`, to scrounge.
+  # Review tier for the whole family; `ti cigane` below carries the action.
+  - id: hr.hate.roma
+    term: cigan
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cigani
+      - cigana
+      - ciganu
+      - ciganom
+      - cigane
+      - ciganin
+      - ciganina
+      - ciganka
+      - cigo
+      - cigoš
+      - cigos
+    context_required: true
+  - id: hr.hate.racial
+    term: crnčuga
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - crncuga
+      - crnčuge
+      - crncuge
+      - crnčugu
+      - crncugu
+      - crnjo
+      - crnja
+      - šiptar
+      - siptar
+      - šiptari
+      - siptari
+      - šiptara
+      - siptara
+    context_required: false
+  # Every one of these carries a legitimate historical reading -- a wartime
+  # militia, a wartime regime, a regional name -- and every one of them is also
+  # thrown as ethnic abuse in this region. A token matcher cannot tell a history
+  # lesson from an insult, so the whole set is review tier and a Croatian
+  # moderator decides.
+  - id: hr.hate.ethnic-ambiguous
+    term: četnik
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cetnik
+      - četnici
+      - cetnici
+      - četnika
+      - cetnika
+      - ustaša
+      - ustasa
+      - ustaše
+      - ustase
+      - balija
+      - balije
+      - balijo
+      - balijama
+    context_required: true
+  - id: hr.hate.slur-directed
+    term: ti cigane
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ti cigan
+      - ti pederu
+      - ti crnjo
+      - ti šiptaru
+      - ti siptaru
+      - ti balijo
+      - ti četniče
+      - ti cetnice
+    context_required: false
+  # Phrases only. A bare žid-derived token de-accents onto `zid`, a wall, and
+  # `zidove`, `zidovi` and `zidovima` are all ordinary Croatian.
+  - id: hr.hate.antisemitic
+    term: židove u plin
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zidove u plin
+      - židovi u plin
+      - zidovi u plin
+      - hajl hitler
+      - heil hitler
+      - sieg heil
+    context_required: false
+  # `retardiran` is also the clinical word, so a sentence about a disability is
+  # one of the readings this rule reaches. Review tier. The directed insult a
+  # Croatian player actually uses is `debil`, and that lives in the harassment
+  # rule below.
+  - id: hr.hate.ableist
+    term: retardiran
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retardirana
+      - retardirani
+      - retard
+      - retardo
+      - mentalno zaostao
+      - zaostao si
+    context_required: true
+  - id: hr.hate.homophobic-casual
+    term: jesi gej
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - kakav gej
+      - to je gej
+      - baš gej
+      - bas gej
+      - si gej
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: hr.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `ubij se` stays at severity 3; the respawn reading is carved out by the allow
+  # entries at the top of this file. `crkni` is deliberately absent: it is
+  # ordinary PvP speech in this game.
+  - id: hr.harassment.self-harm
+    term: ubij se
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - idi se ubit
+      - idi se ubiti
+      - objesi se
+      - skoči pod vlak
+      - skoci pod vlak
+      - skoči s mosta
+      - skoci s mosta
+      - prereži si vene
+      - prerezi si vene
+      - popij izbjeljivač
+      - popij izbjeljivac
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: hr.harassment.death-wish-ambiguous
+    term: nadam se da ćeš umrijeti
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - nadam se da ces umrijeti
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: hr.harassment.self-harm-disclosure
+    term: želim se ubiti
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - zelim se ubiti
+      - želim umrijeti
+      - zelim umrijeti
+      - ne želim više živjeti
+      - ne zelim vise zivjeti
+      - režem se
+      - rezem se
+      - kms
+      - nikome ne bih nedostajao
+    context_required: true
+  # Directed abuse, five-minute mute. Bare swearing is deliberately absent for
+  # the same reason as in en.yml and cs.yml: in Croatian voice chat it is
+  # punctuation, and none of the five categories fits it anyway.
+  - id: hr.harassment.abuse
+    term: jebi se
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - odjebi
+      - jebem ti mater
+      - pizda ti materina
+      - kurvin sine
+      - si debil
+      - ti si debil
+      - si kreten
+      - ti si kreten
+      - si šupak
+      - si supak
+      - začepi gubicu
+      - zacepi gubicu
+      - začepi više
+      - zacepi vise
+    context_required: false
+  - id: hr.harassment.insult
+    term: si patetičan
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - si patetican
+      - si bezveze
+      - si glup
+      - nitko te ne voli
+      - svi te mrze
+      - nitko te ne želi ovdje
+      - nitko te ne zeli ovdje
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something outside the game: an
+  # address, a home, a school, a family.
+  - id: hr.threat.violence
+    term: znam gdje živiš
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - znam gdje zivis
+      - znam tvoju adresu
+      - našao sam tvoju adresu
+      - nasao sam tvoju adresu
+      - doći ću ti kući
+      - doci cu ti kuci
+      - dolazim ti kući
+      - dolazim ti kuci
+      - ubit ću ti obitelj
+      - ubit cu ti obitelj
+      - znam u koju školu ideš
+      - znam u koju skolu ides
+      - sutra donosim pištolj
+      - sutra donosim pistolj
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier, exactly as
+  # the Czech equivalents are in cs.yml.
+  - id: hr.threat.violence-ambiguous
+    term: upucat ću te
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - upucat cu te
+      - izbost ću te
+      - izbost cu te
+      - naći ću te i ubiti
+      - naci cu te i ubiti
+      - razbit ću ti glavu
+      - razbit cu ti glavu
+    context_required: true
+  - id: hr.threat.mass-violence
+    term: upucat ću sve u školi
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - upucat cu sve u skoli
+      - dići ću školu u zrak
+      - dici cu skolu u zrak
+      - donijet ću pištolj u školu
+      - donijet cu pistolj u skolu
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: hr.threat.mass-violence-ambiguous
+    term: pucnjava u školi
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - pucnjava u skoli
+    context_required: true
+  - id: hr.threat.sexual-violence
+    term: silovat ću te
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - silovat cu te
+      - silovat ću ti mater
+      - silovat cu ti mater
+    context_required: false
+  - id: hr.threat.doxxing
+    term: objavit ću tvoju adresu
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - objavit cu tvoju adresu
+      - poslat ću tvoju adresu
+      - poslat cu tvoju adresu
+      - doxat ću te
+      - doxat cu te
+    context_required: false
+  # In Minecraft an "IP" is the server address, so an IP claim is review tier for
+  # the same reason as in en.yml and cs.yml.
+  - id: hr.threat.doxxing-ip
+    term: imam tvoj ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - znam tvoj ip
+      - ddosat ću te
+      - ddosat cu te
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: hr.sexual.explicit
+    term: popuši mi
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - popusi mi
+      - poliži mi
+      - polizi mi
+      - hoću te pojebati
+      - hocu te pojebati
+      - pokaži mi sise
+      - pokazi mi sise
+      - pokaži mi guzicu
+      - pokazi mi guzicu
+      - pošalji nudes
+      - posalji nudes
+      - pošalji golu sliku
+      - posalji golu sliku
+    context_required: false
+  - id: hr.sexual.grooming
+    term: nemoj reći roditeljima
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nemoj reci roditeljima
+      - nemoj reći mami
+      - nemoj reci mami
+      - nemoj nikome reći
+      - nemoj nikome reci
+      - neka ostane među nama
+      - neka ostane medu nama
+      - neka ostane medju nama
+      - to je naša tajna
+      - to je nasa tajna
+    context_required: false
+  # `jesi gol` means "you have no armour on" to a Minecraft player -- `gol` is
+  # also a goal -- and `koliko imaš godina` is an ordinary question. `skini se`
+  # is here rather than at mute tier because `skini` is what a player says about
+  # armour and about downloading a mod. Review tier, with the rest of the
+  # ambiguous approach set.
+  - id: hr.sexual.grooming-signal
+    term: jesi sam doma
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - jesi sama doma
+      - jesu roditelji doma
+      - je li mama doma
+      - jesi gol
+      - jesi gola
+      - koliko imaš godina
+      - koliko imas godina
+      - zrela si za svoje godine
+      - skini se
+      - pošalji mi sliku
+      - posalji mi sliku
+      - pošalji mi slike
+      - posalji mi slike
+      - dodaj me na snapchat
+      - dodaj me na snapu
+      - upali kameru
+    context_required: true

@@ -1,0 +1,260 @@
+schema = 1
+
+# Canonical language catalog. Status lives here; moderation support does not.
+#
+# A language is supported for moderation exactly when processor/service/rules/<code>.yml
+# exists. This file records what we are willing to say about each code: whether Cloud
+# may offer it, which model it rides on, whether a pack exists, and whether anyone has
+# actually measured accuracy. It is not a promise that the speech model "supports 100
+# languages", and `auto` is not a language, so it must never appear here.
+#
+# rule_pack: none | draft | reviewed | verified
+# evidence:  unmeasured | pilot | verified
+# cloud_base: only English is true in the first cloud plan.
+# cloud_selectable: true only for verified moderation packs in this first release.
+#
+# Measured WER exists for English (5.83%) and Czech (10.19%) on the Opus-path corpus
+# in docs/stt-model-selection.md. Those two numbers must not be copied onto the other
+# twenty-one packs. Production quality model: parakeet-tdt-0.6b-v3-fp32.
+
+[[languages]]
+code = "bg"
+name = "Bulgarian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "cs"
+name = "Czech"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+# Opus-path WER 10.19% on the measured corpus. Do not copy this number onto other packs.
+evidence = "verified"
+
+[[languages]]
+code = "da"
+name = "Danish"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "de"
+name = "German"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "el"
+name = "Greek"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "en"
+name = "English"
+cloud_base = true
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+# Opus-path WER 5.83% on the measured corpus. Do not copy this number onto other packs.
+evidence = "verified"
+
+[[languages]]
+code = "es"
+name = "Spanish"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "et"
+name = "Estonian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+# The production model transcribes Finnish. There is no rule pack and no word list
+# to sweep one against, so it is not selectable and must not be offered.
+[[languages]]
+code = "fi"
+name = "Finnish"
+cloud_base = false
+cloud_selectable = false
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "none"
+evidence = "unmeasured"
+
+[[languages]]
+code = "fr"
+name = "French"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "hr"
+name = "Croatian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "hu"
+name = "Hungarian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "it"
+name = "Italian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "lt"
+name = "Lithuanian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "lv"
+name = "Latvian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+# Same situation as Finnish: the model transcribes Maltese; nothing matches it.
+[[languages]]
+code = "mt"
+name = "Maltese"
+cloud_base = false
+cloud_selectable = false
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "none"
+evidence = "unmeasured"
+
+[[languages]]
+code = "nl"
+name = "Dutch"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "pl"
+name = "Polish"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "pt"
+name = "Portuguese"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "ro"
+name = "Romanian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "ru"
+name = "Russian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "sk"
+name = "Slovak"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "sl"
+name = "Slovenian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+[[languages]]
+code = "sv"
+name = "Swedish"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"
+
+# Research candidate only. Production runtime has no Omnilingual family loader,
+# there is no rule pack, and Cloud must not offer it. The tokenizer tag is not
+# evidence of Parakeet training-set support.
+[[languages]]
+code = "tr"
+name = "Turkish"
+cloud_base = false
+cloud_selectable = false
+models = ["omnilingual-ctc-300m"]
+rule_pack = "none"
+evidence = "unmeasured"
+
+[[languages]]
+code = "uk"
+name = "Ukrainian"
+cloud_base = false
+cloud_selectable = true
+models = ["parakeet-tdt-0.6b-v3-fp32"]
+rule_pack = "verified"
+evidence = "unmeasured"

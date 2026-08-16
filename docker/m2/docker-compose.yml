@@ -1,0 +1,63 @@
+# VoiceSniffer processor. Needs an amd64 Linux host with Docker, about 3 GB of
+# free RAM and 4 GB of disk. Nothing to clone and nothing to build.
+#
+#     printf '{"my-server":"%s"}\n' "$(openssl rand -hex 32)" > tokens.local.json
+#     docker compose up -d
+#
+# Put that same token in the plugin config. Keep tokens.local.json private.
+#
+# First start downloads about 2.4 GB of speech model and can take several
+# minutes. Watch it with `docker compose logs -f`.
+services:
+  processor:
+    image: ghcr.io/jan1k1/voicesniffer-processor:${VOICESNIFFER_IMAGE_TAG:-1.0.0}
+    environment:
+      VOICESNIFFER_BIND_HOST: 0.0.0.0
+      VOICESNIFFER_BIND_PORT: 8080
+      VOICESNIFFER_MODEL_ID: ${VOICESNIFFER_MODEL_ID:-parakeet-tdt-0.6b-v3-fp32}
+      VOICESNIFFER_MODELS_DIR: /models
+      VOICESNIFFER_WORKERS: ${VOICESNIFFER_WORKERS:-4}
+      VOICESNIFFER_MODEL_THREADS: ${VOICESNIFFER_MODEL_THREADS:-1}
+      VOICESNIFFER_TOKENS_FILE: /run/secrets/tokens
+    ports:
+      # Loopback only by default. To reach it from another machine set
+      # VOICESNIFFER_BIND_ADDRESS to this host's LAN address. Plain http is
+      # accepted on a private network; anything routable needs TLS in front.
+      - "${VOICESNIFFER_BIND_ADDRESS:-127.0.0.1}:${VOICESNIFFER_PROCESSOR_PORT:-8090}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    volumes:
+      - models:/models
+    secrets:
+      - tokens
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    # Raise this before raising VOICESNIFFER_WORKERS.
+    mem_limit: ${VOICESNIFFER_MEMORY:-3g}
+    memswap_limit: ${VOICESNIFFER_MEMORY:-3g}
+    cpus: ${VOICESNIFFER_CPUS:-4}
+    stop_grace_period: 30s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c",
+             "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 900s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  models:
+
+secrets:
+  tokens:
+    file: ${VOICESNIFFER_TOKENS_FILE_HOST:-./tokens.local.json}

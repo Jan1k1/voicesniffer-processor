@@ -1,0 +1,707 @@
+version: 1
+language: en
+# ---------------------------------------------------------------------------
+# How a rule in this pack is written, and why
+#
+# **`fuzzy` is reserved for patterns whose consonant frame admits no real word.**
+# Not "six characters or more" -- that was the earlier rule here and it was
+# wrong. The budget is one differing run below six characters and two at six or
+# above, and a differing run may change length *or* swap a vowel, so at budget 2
+# a pattern is roughly three edits from its neighbours. That reaches ordinary
+# vocabulary fast: `niggas` accepts **nagas** (a Twilight Forest boss), `niggar`
+# accepts **Nagar**, `retard` accepts **ritard** and is itself a neutral English
+# verb, `buzny` accepts **bezny** (`běžný` with the marks dropped, which is what
+# the transcriber emits), `cikáni` accepts **cukání** and **cákání**. Every one
+# of those was a confirmed severity-3 false positive in this file.
+#
+# So fuzzy is now three English patterns, all with the same five-consonant
+# frame, and every other slur is `exact`. `exact` costs obfuscation recall and
+# that is the trade: a term one edit from a real word cannot be fuzzy, because
+# an hour-long mute on `chunk` or `nagas` ends the product.
+#
+# **Two sweep corpora are the gate, and a dictionary alone is not enough.**
+# Measured 2026-07-29 on VM 104 against the pre-fix fuzzy patterns:
+#
+#     american-english     72,232 tokens   found: fagot, fagots
+#     british-english      71,684 tokens   found: fagot, fagots
+#     cs_CZ.dic           254,540 tokens   found: cogan, cygan, cákaný
+#     minecraft            5,419 tokens   found: nagar, nagas, nagger, naggers,
+#                                                ritard, fagot, fagots, cogan,
+#                                                coogan, bezny, cukani, cakani
+#
+# `nagas` is a Twilight Forest boss, `nagar` a place name, `nagger` a derived
+# form, `ritard` a music abbreviation. **None of them is in either English
+# dictionary**, so the dictionary sweep could not have found them -- a human
+# reading the pack did. Generate the second corpus, then run both:
+#
+#     python3 processor/bench/domain-corpus/minecraft_vocabulary.py \
+#         --out /tmp/minecraft-words.txt
+#     python3 processor/bench/domain-corpus/fp_surface.py --sweep \
+#         --rules processor/service/rules --fail-on-hit
+#     python3 processor/bench/domain-corpus/fp_surface.py --pack <pack> \
+#         --words /tmp/minecraft-words.txt --vendor <vendor> --fail-on-hit
+#
+# Both corpora are clean on this pack as shipped. Neither is a closure: the
+# domain list's mod vocabulary is hand-curated, which is the same weakness as a
+# hand-written test corpus. A customer reporting a false mute is still a real
+# signal, not a contradiction of this gate.
+#
+# **The loader normalises source terms, so a term is never dead for style.**
+# ``_parse_rule`` runs every non-regex pattern through ``normalize_transcript``,
+# so ``JOIN MY SERVER!`` loads as ``join my server`` and fires. Terms are still
+# written normalised here for legibility, but the earlier claim in this header
+# that an unnormalised term "silently never fires" was false. It *is* true for
+# ``match: regex``, whose source is not normalised -- a regex with a literal
+# hyphen, apostrophe or escaped dot can never match. A *capital* is fine, though:
+# patterns compile with IGNORECASE, so the widely-repeated claim that uppercase
+# breaks a regex rule here is wrong. Regex rules must now carry a `probe` that
+# the loader verifies actually matches, because none of this is decidable
+# statically.
+#
+# **`context_required: true` is the review tier.** Reported to staff and shown
+# in the Discord embed, excluded from the severity that drives the automatic
+# warn/mute (``VerdictPolicy.decide`` returns alert-only). This is where a term
+# with a reachable benign reading belongs, and after review it is where most of
+# the ambiguous vocabulary went.
+#
+# **A bare combat verb is not a moderatable signal in this game.** `I'll stab
+# you`, `I'll shoot you` and `I'll find you and kill you` were severity 3 here,
+# under a comment claiming the threat rules could not fire on gameplay. They are
+# ordinary PvP speech. They are now review tier; automatic severity 3 is reserved
+# for phrases that name something outside the game -- an address, a home, a
+# school, a family.
+#
+# That rule reaches further than the combat verbs it was written for. `go and
+# die`, `i hope you die` and their equivalents in seventeen other packs were
+# severity 3, and `go and die already i need that loot` is a sentence about a
+# mob. They are in `*.harassment.death-wish-ambiguous` now, at review tier,
+# following the rule fr.yml already had. The same argument demoted the bare topic
+# noun in `*.threat.mass-violence`: `school shooting` with nobody named is a news
+# headline, and a child talking about something that happened near them is the
+# case that most needs a human and least needs a punishment.
+#
+# **Self-harm has two directions and the packs could only see one.** Every
+# self-harm rule in all twenty-three packs was second person -- `kill yourself`
+# -- so `i want to kill myself`, `kms`, `i cut myself last night` and `nobody
+# would miss me` reached nothing at all. For a customer base of servers full of
+# teenagers that is the most valuable thing moderation could surface, and it was
+# the one thing invisible to the product. `*.harassment.self-harm-disclosure`
+# carries it in every pack, at `context_required: true` in every pack, and that
+# is not caution about precision: a mute is the wrong response to a disclosure
+# even when the disclosure is real.
+#
+# **Minecraft vocabulary is a hard constraint.** `kill`, `chunk`, `spawn`,
+# `raid`, `wither`, `nether`, `ghast`, `naked` (no armour), `ip` (server
+# address) and `shoot` are ordinary speech here. Every confirmed collision is
+# now in the corpus in ``test_rule_pack_content.py``.
+# ---------------------------------------------------------------------------
+allow:
+  # The country and the river. One held-down letter from a listed term, which is
+  # the one drift the fuzzy matcher cannot refuse without also refusing the
+  # elongation obfuscations it exists to catch.
+  - niger
+  # One vowel from `nigger`/`niggers`, so unreachable by any tightening that
+  # keeps those two fuzzy -- and they stay fuzzy because they are the pattern
+  # obfuscation actually targets. Ordinary English: someone who nags.
+  - nagger
+  - naggers
+  # `kill yourself` is also how a player says "reset your spawn point". The
+  # phrase is the single most valuable harassment term in the pack, so it stays
+  # at severity 3 and the game reading is carved out instead. Only these
+  # phrasings are carved out; "kill yourself" alone still flags.
+  - kill yourself to respawn
+  - kill yourself and respawn
+  - kill yourself so you respawn
+  - kill yourself to reset spawn
+  # `faggot` with one `g` dropped, which is a run-length change and therefore
+  # inside the fuzzy accept set by design. It is also the bassoon -- and the
+  # ordinary Czech word for one, so a Czech utterance misrouted to this pack
+  # reaches it too. Carved out rather than left to mute for an hour; the cost is
+  # that this one spelling of the slur is not caught, which is the same trade the
+  # `niger` entry makes.
+  - fagot
+  - fagots
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: en.spam.server-ad
+    term: join my server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - visit my server
+      - come to my server
+      - my server ip is
+    context_required: false
+  # Review tier: "join my discord for the raid" is ordinary talk on a server
+  # that runs its own Discord, and a warn for it is still a warn.
+  - id: en.spam.community-ad
+    term: join my discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - join my smp
+    context_required: true
+  - id: en.spam.free-items
+    term: free diamonds
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: en.spam.giveaway-scam
+    term: free ranks
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - free rank
+      - free minecoins
+      - free vbucks
+      - free robux
+      - free gift card
+      - free gift cards
+      - click the link
+      - click my link
+    context_required: true
+  - id: en.spam.self-promo
+    term: subscribe to my channel
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - sub to my channel
+      - check out my channel
+      - check out my youtube
+      - check my youtube
+      - watch my youtube
+      - follow my twitch
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The only fuzzy rule in this pack. Frame n-gg-r: five consonant positions in
+  # six characters, and the two ordinary words it still reaches (`nagger`,
+  # `naggers`) are allow-listed above rather than left to fire.
+  - id: en.hate.nword
+    term: nigger
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - niggers
+      - nigga
+    context_required: false
+  # The spellings that cannot be fuzzy. `niggas` accepted **nagas**, `niggar`
+  # accepted **Nagar**, and at budget 2 the rest sit the same distance from
+  # ordinary vocabulary. Listed exactly instead: no obfuscation tolerance, no
+  # false mutes. Compound forms are here too -- the fuzzy matcher compares whole
+  # tokens, so `sandnigger` shares no run structure with `nigger`.
+  # The spellings that cannot be fuzzy, plus the ones the speech models actually
+  # produce. `niggas` accepted **nagas** as a fuzzy pattern and `niggar` accepted
+  # **Nagar**, so at budget 2 none of these can carry obfuscation tolerance.
+  #
+  # The second group is different in kind and worth naming: a transcriber hearing
+  # the word does not reliably write it. Observed from a live session on the
+  # built-in `standard` model, one speaker, one minute -- `Niga`, `Nga`,
+  # `Niggar`. Only the third was caught. These are not obfuscations by the
+  # speaker, they are the model spelling badly, and no amount of fuzzy matching
+  # on the *rule* side fixes a missing syllable. They have to be listed.
+  #
+  # `niga` must stay exact for the same reason `niggas` did: one vowel makes it
+  # **naga**, a Twilight Forest boss.
+  - id: en.hate.nword-listed
+    term: niggas
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggah
+      - nigguh
+      - niggaz
+      - niggor
+      - niggar
+      - niggur
+      - sandnigger
+      - sand nigger
+      - sand niggers
+      - wigger
+      - wiggers
+      # Transcriber spellings, observed rather than guessed.
+      - niga
+      - nigas
+      - nigah
+      - nigga h
+      - nig ga
+      - nig gas
+      - nga
+      - ngas
+      - nigger s
+    context_required: false
+  # `exact`, not fuzzy. The plural carries two adjacent different vowels (`ie`),
+  # and mutating one into the other merges two runs, so the run-count check
+  # refuses that particular drift -- the pattern is not dead (an exact token
+  # still matches) but the tolerance is uneven, and the accept set at budget 2 is
+  # unenumerated. Pinned by ``test_fuzzy_patterns_have_no_adjacent_distinct_vowels``.
+  - id: en.hate.tslur
+    term: tranny
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - trannys
+      - trannies
+      - troon
+      - troons
+    context_required: false
+  - id: en.hate.fslur
+    term: faggot
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - faggots
+    context_required: false
+  - id: en.hate.slur-racial
+    term: gook
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - gooks
+      - ching chong
+      - spic
+      - spics
+      - wetback
+      - wetbacks
+      - beaner
+      - beaners
+      - kike
+      - kikes
+      - paki
+      - pakis
+      - towelhead
+      - towelheads
+      - porch monkey
+      - jigaboo
+    context_required: false
+  # Terms whose benign reading is reachable in *this* register: a raccoon, a
+  # cigarette in British English, an ethnonym many people use without malice,
+  # and a gap in armour on a server where everybody is wearing armour. Review
+  # tier -- staff see every one of these, nobody is muted by one.
+  - id: en.hate.slur-ambiguous
+    term: coon
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - coons
+      - fag
+      - fags
+      - gypsy
+      - gypsies
+      - gyppo
+      - chink
+      - chinks
+      # `dyke` was on the automatic rule above, and it is an ordinary English
+      # word: an embankment or drainage ditch, in the American English
+      # dictionary, and a thing Minecraft players build. It is also not a racial
+      # slur, which is what that rule is for. Same trade as `chink`: staff see
+      # it, nobody is muted for describing their water defences.
+      - dyke
+      - dykes
+    context_required: true
+  - id: en.hate.antisemitic
+    term: heil hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - hail hitler
+      - gas the jews
+      - gas the kikes
+      - back to the ovens
+      - fucking jew
+    context_required: false
+  # Bare `retard`/`retarded` is a neutral English verb -- "heat retards curing",
+  # "the ignition is retarded", "flame retardant" -- and fuzzy matching on it
+  # also accepted **ritard**. Both were confirmed severity-2 false positives.
+  # The bare token is review tier and `exact`; the directed forms below carry the
+  # automatic action, because "you retard" is not a verb.
+  - id: en.hate.ableist
+    term: retard
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retards
+      - retarded
+      - tard
+      - tards
+    context_required: true
+  - id: en.hate.ableist-directed
+    term: you retard
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - youre a retard
+      - you re a retard
+      - ur a retard
+      - youre retarded
+      - you re retarded
+      - ur retarded
+      - fucking retard
+      - stop being retarded
+      - retarded idiot
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: en.hate.homophobic-casual
+    term: thats gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - that s gay
+      - so gay
+      - youre gay
+      - you re gay
+      - ur gay
+    context_required: true
+  # --------------------------------------------------------- harassment ---
+  # `kill yourself` stays at severity 3. The respawn reading is carved out by the
+  # allow entries at the top of this file rather than by weakening the rule.
+  - id: en.harassment.self-harm
+    term: kill yourself
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - kys
+      - neck yourself
+      - kill your self
+      - kill urself
+      - kill yourselves
+      - hang yourself
+      - end yourself
+      - off yourself
+      - rope yourself
+      - unalive yourself
+      - slit your wrists
+      - drink bleach
+      - commit suicide
+      # Same transcriber problem as the slur above: "kill yourself" came back as
+      # "K yourself" from the built-in model, which no rule was going to match.
+      - k yourself
+      - kil yourself
+      - kill your elf
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: en.harassment.death-wish-ambiguous
+    term: i hope you die
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - go and die
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: en.harassment.self-harm-disclosure
+    term: i want to kill myself
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - i wanna kill myself
+      - im going to kill myself
+      - i m going to kill myself
+      - im gonna kill myself
+      - i m gonna kill myself
+      - i want to end it all
+      - unalive myself
+      - i want to unalive myself
+      - kms
+      - i wanna kms
+      - i want to die
+      - i dont want to live anymore
+      - i don t want to live anymore
+      - i dont want to be here anymore
+      - i don t want to be here anymore
+      - nobody would miss me
+      - no one would miss me
+      - i cut myself
+      - i want to hurt myself
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because filtering it in voice chat produces more
+  # noise than moderation and none of the five categories fits it anyway.
+  - id: en.harassment.abuse
+    term: shut the fuck up
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - stfu
+      - fuck you
+      - fuck off
+      - fuck your mom
+      - piece of shit
+      - son of a bitch
+      - dumb bitch
+      - youre a bitch
+      - you re a bitch
+      - little bitch
+    context_required: false
+  # Trash talk that is directed but mild. Review tier -- worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: en.harassment.insult
+    term: you suck
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - youre trash
+      - you re trash
+      - ur trash
+      - youre stupid
+      - you re stupid
+      - ur stupid
+      - youre an idiot
+      - you re an idiot
+      - youre a moron
+      - you re a moron
+      - youre worthless
+      - you re worthless
+      - nobody likes you
+      - everyone hates you
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything that a player
+  # could plausibly say about PvP is in the review-tier rule below it.
+  - id: en.threat.violence
+    term: i know where you live
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - i know your address
+      - i found your address
+      - i know your school
+      - ill find your address
+      - i ll find your address
+      - ill find where you live
+      - i ll find where you live
+      - im coming to your house
+      - i m coming to your house
+      - ill come to your house
+      - i ll come to your house
+      - ill kill your family
+      - i ll kill your family
+      - kill your family
+      - im bringing a gun
+      - i m bringing a gun
+    context_required: false
+  # Every one of these is ordinary PvP speech in a game about swords and bows:
+  # "I'll stab you with my sword", "I'll shoot you with my bow", "I'll find you
+  # and kill you in the Nether". All three were severity 3 and all three were
+  # confirmed false positives. Review tier keeps the signal for staff without
+  # muting a player for describing combat.
+  - id: en.threat.violence-ambiguous
+    term: ill stab you
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - i ll stab you
+      - ill shoot you
+      - i ll shoot you
+      - ill beat you up
+      - i ll beat you up
+      - ill find you and kill you
+      - i ll find you and kill you
+    context_required: true
+  # `im going to shoot up` was here without an object and fired on "I'm going to
+  # shoot up at the ghast" -- ghasts fly, so players shoot up at them. Every
+  # variant now names the target.
+  - id: en.threat.mass-violence
+    term: shoot up the school
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - shoot up my school
+      - shoot up your school
+      - bring a gun to school
+      - bomb the school
+      - blow up the school
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: en.threat.mass-violence-ambiguous
+    term: school shooting
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: en.threat.sexual-violence
+    term: ill rape you
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - i ll rape you
+      - im going to rape you
+      - i m going to rape you
+      - im gonna rape you
+      - i m gonna rape you
+      - i will rape you
+      - rape your mom
+    context_required: false
+  # Police at a child's front door. Separated from the doxxing rule below and
+  # kept at severity 3 -- there is no gameplay reading of "swat".
+  - id: en.threat.swatting
+    term: ill swat you
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - i ll swat you
+      - im swatting you
+      - i m swatting you
+      - im gonna swat you
+      - i m gonna swat you
+      - ill send the cops
+      - i ll send the cops
+    context_required: false
+  - id: en.threat.doxxing
+    term: ill dox you
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - i ll dox you
+      - im gonna dox you
+      - i m gonna dox you
+      - im going to dox you
+      - i m going to dox you
+      - ill leak your address
+      - i ll leak your address
+      - post your address
+      - ill post your address
+      - i ll post your address
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "I've got your IP for the server" is a helpful sentence. Review tier.
+  - id: en.threat.doxxing-ip
+    term: ive got your ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - i ve got your ip
+      - i have your ip
+      - i know your ip
+      - leak your ip
+      - ill ddos you
+      - i ll ddos you
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: en.sexual.explicit
+    term: suck my dick
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - suck my cock
+      - suck my balls
+      - eat my ass
+      - sit on my face
+      - i want to fuck you
+      - let me fuck you
+      - show me your tits
+      - show me your boobs
+      - show me your ass
+      - show me your pussy
+      - send nudes
+      - send me nudes
+      - send me a nude
+      - send me nude pics
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: en.sexual.grooming
+    term: dont tell your parents
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - don t tell your parents
+      - dont tell your mom
+      - don t tell your mom
+      - dont tell your mum
+      - don t tell your mum
+      - dont tell anyone about this
+      - don t tell anyone about this
+      - dont ever tell your parents
+      - don t ever tell your parents
+      - keep this our secret
+      - keep it our secret
+      - our little secret
+      - take your clothes off
+      - take off your clothes
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrases a
+  # Minecraft player uses about armour: "are you naked" means "are you wearing
+  # armour" on any survival server, and it was severity 3 here. Review tier --
+  # a moderator reading three of these from one account has what they need.
+  - id: en.sexual.grooming-signal
+    term: are you home alone
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - you home alone
+      - are your parents home
+      - is your mom home
+      - is your mum home
+      - are you alone right now
+      - are you naked
+      - youre so mature for your age
+      - you re so mature for your age
+      - how old are you really
+      - send me pics
+      - send me a pic
+      - send me your pics
+      - send me a picture of you
+      - send me photos
+      - send me sexy pictures
+      - add me on snap
+      - add me on snapchat
+      - go on video call
+      - turn your camera on
+    context_required: true

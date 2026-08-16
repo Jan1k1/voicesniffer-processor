@@ -1,0 +1,604 @@
+version: 1
+language: de
+# See en.yml for the pack-wide policy. Five things are specific to German.
+#
+# **Almost everything here is `exact`.** The one term that looks like an obvious
+# fuzzy candidate, `neger`, is one vowel from **Nager**, the ordinary German word
+# for a rodent, and the budget for a five-letter pattern is exactly one differing
+# run. So the German racial slurs are listed rather than matched loosely, the
+# same call cs.yml made for `cikán`. The only fuzzy rule in this pack is the
+# `schwuchtel` stem, whose ten-run frame turned up no German word in the
+# de_DE.dic sweep.
+#
+# **Umlauts need a de-accented twin, `ß` does not.** The matcher folds vowel
+# marks when it compares runs, but `test_consonant_marked_terms_ship_a_de_accented_twin`
+# asks for the NFKD-stripped spelling of every pattern, and `ä`, `ö`, `ü`
+# decompose while `ß` does not. Every umlauted pattern below therefore ships an
+# `a`/`o`/`u` twin. `ß` gets a hand-written `ss` twin instead, because the
+# transcriber writes both and no test would have asked for it.
+#
+# **German makes the reflexive and the transitive read alike, and that is the
+# trap in this language.** `bring dich um` is "kill yourself"; `ich bring dich
+# um` is "I'll kill you", which is ordinary PvP speech and not moderatable in
+# this game. The token sequence is identical, so an `exact` rule on the first
+# fires on the second, and no dictionary sweep can see it because a sweep is
+# token-level.
+#
+# This was first solved by putting `ich bring dich um` in `allow:`, and that
+# solution was worse than the problem it fixed. `allow` suppresses *every* match
+# inside the allowed span, so the death threat stopped matching anything at all:
+# the one pack-level entry meant to protect a PvP sentence silently deleted a
+# real threat, and no threat rule could take it back, because any pattern
+# spelling that phrase sits inside the same span and is suppressed with it.
+#
+# So the distinction is now made where it actually lives, in what comes
+# immediately before the verb. `de.harassment.self-harm-imperative` is the only
+# `regex` rule in any pack: `bring dich um` not preceded by `ich`. That is a
+# statement the `exact` matcher cannot make and the whole reason the schema has
+# a regex match type. It also lets the three phrasings that used to be deleted
+# from this pack come back -- `bring dich doch um`, `bring dich endlich um`,
+# `bring dich selbst um` -- because the prefix, not the suffix, is what decides
+# them. The transitive reading is now caught, at review tier, in
+# `de.threat.violence-ambiguous` beside the other PvP phrasings.
+#
+# **`ich bringe eine waffe mit` was drafted here and removed.** A Waffe is a
+# sword or a bow to a Minecraft player, so it named nothing outside the game.
+# The severity-3 threat rule now says `pistole`, which vanilla Minecraft does not
+# contain. `spring von der brücke` went the same way: Minecraft has bridges.
+#
+# **`kys` is not in this pack.** It is the one English-origin abbreviation German
+# players actually use, but `kys` is the ordinary Danish word for "kiss", and a
+# server may run da.yml alongside this one. Dropped from all four of the packs
+# added with this one rather than left to fire on a Danish utterance that the
+# language detector sent to the wrong pack.
+#
+# Native review still outstanding on the register calls: whether `neger`, which
+# is at mute tier here, should be at review tier given that older speakers used
+# it neutrally; whether `zieh dich aus` is reachable as armour talk (German names
+# the Rüstung when it means armour, which is why it is at mute tier); and whether
+# `du jude` reads as an insult or as ordinary reference to a German ear.
+allow:
+  # The other way the transitive reading arrives, and the one a lookbehind on
+  # `ich` does not reach: "ich finde dich und bring dich um", "ich komm rüber und
+  # bring dich um". `ich bring dich um` itself is no longer here -- see the
+  # header -- because carving it out here deleted the threat as well as the false
+  # positive.
+  - und bring dich um
+  # How a player says "die so you respawn at your bed".
+  - bring dich um damit du respawnst
+  - bring dich um und respawn
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: de.spam.server-ad
+    term: komm auf meinen server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kommt auf meinen server
+      - join meinen server
+      - joint meinen server
+      - besuch meinen server
+      - meine server ip ist
+    context_required: false
+  # Review tier for the same reason as en.yml: a server that runs its own Discord
+  # hears "komm auf meinen discord" all day and a warn for it is still a warn.
+  - id: de.spam.community-ad
+    term: join meinen discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - joint meinen discord
+      - komm auf meinen discord
+      - tritt meinem discord bei
+    context_required: true
+  - id: de.spam.free-items
+    term: kostenlose diamanten
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis diamanten
+    context_required: true
+  # Servers run real giveaways, so staff decide whether the offer is theirs.
+  - id: de.spam.giveaway-scam
+    term: kostenlose ränge
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kostenlose range
+      - gratis ränge
+      - gratis range
+      - kostenlose robux
+      - gratis robux
+      - gratis minecoins
+      - gratis geschenkkarte
+      - klick den link
+      - klick auf meinen link
+      - klickt auf den link
+    context_required: true
+  - id: de.spam.self-promo
+    term: abonniert meinen kanal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - abonniere meinen kanal
+      - abonniert meinen channel
+      - lasst ein abo da
+      - schaut euch meinen kanal an
+      - schaut euch mein youtube an
+      - checkt meinen youtube kanal
+      - folgt mir auf twitch
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `exact`, not fuzzy, and the reason is worth stating: at five characters the
+  # fuzzy budget is one differing run, and one vowel turns `neger` into **Nager**,
+  # the ordinary German word for a rodent. Every spelling is listed instead.
+  - id: de.hate.nword
+    term: neger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negern
+      - negers
+      - negerin
+      - negerinnen
+      - nigger
+      - niggers
+      - nigga
+      - niggas
+      - sandnigger
+    context_required: false
+  - id: de.hate.slur-ethnic
+    term: schlitzauge
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - schlitzaugen
+      - kümmeltürke
+      - kummelturke
+      - kümmeltürken
+      - kummelturken
+      - itaker
+      - polacke
+      - polacken
+      - ziegenficker
+      - kanakenpack
+    context_required: false
+  # Terms whose benign or non-malicious reading is reachable in this register.
+  # `Zigeuner` is still the everyday name of a schnitzel and a sauce, `Kanake` is
+  # used self-referentially by exactly the age group on these servers, `Mongo`
+  # and `Transe` and `Tunte` all carry uses that are rude rather than
+  # moderatable, and `du jude` is an insult in a German schoolyard but is also
+  # two ordinary words. Staff see every one of these, nobody is muted by one.
+  - id: de.hate.slur-ambiguous
+    term: zigeuner
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zigeunern
+      - kanake
+      - kanaken
+      - mongo
+      - mongos
+      - transe
+      - transen
+      - tunte
+      - tunten
+      - du jude
+    context_required: true
+  # The only fuzzy rule in this pack. Ten runs over the frame schwchtl, and the
+  # de_DE.dic sweep found no German word inside the accept set.
+  - id: de.hate.homophobic
+    term: schwuchtel
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - schwuchteln
+    context_required: false
+  # Directed use of the terms the review-tier rule above holds. `Kanake` said
+  # about oneself is contested; `du Kanake` said at somebody is not, so this
+  # carries the action while the bare term only reports. Same shape as
+  # cs.hate.slur-directed.
+  - id: de.hate.slur-directed
+    term: du kanake
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ihr kanaken
+      - du dreckiger kanake
+      - du zigeuner
+      - du dreckiger zigeuner
+      - du transe
+      - du tunte
+      - arschficker
+    context_required: false
+  # Pejorative `schwul` is ubiquitous in German voice chat and is also the
+  # ordinary, neutral word. Review tier: a moderator watching one account repeat
+  # it is the useful output, not a mute.
+  - id: de.hate.homophobic-casual
+    term: das ist schwul
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - du bist schwul
+      - voll schwul
+      - so schwul
+      - du schwuler
+    context_required: true
+  - id: de.hate.antisemitic
+    term: heil hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sieg heil
+      - juden ins gas
+      - vergast die juden
+      - ab ins gas
+      - judensau
+      - du judensau
+      - judenschwein
+      - hitler hatte recht
+    context_required: false
+  # `behindert` is the ordinary German word for disabled, `Krüppel` appears in
+  # ordinary speech, and `spast` is playground punctuation rather than a
+  # considered insult. Review tier for the bare terms; the directed rule below
+  # carries the action, because `du spast` is aimed at somebody.
+  - id: de.hate.ableist
+    term: behindert
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - behinderte
+      - behinderter
+      - spast
+      - spasti
+      - spastis
+      - spasten
+      - mongoloid
+      - krüppel
+      - kruppel
+    context_required: true
+  - id: de.hate.ableist-directed
+    term: du spast
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - du spasti
+      - du mongo
+      - du bist behindert
+      - du bist voll behindert
+      - du behinderter
+      - du behinderte
+      - du bist ein spast
+      - du bist ein mongo
+      - ihr spasten
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: de.hate.slur-english
+    term: faggot
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Severity 3. The gameplay readings that contain this phrase word for word are
+  # carved out in `allow:` at the top of the file rather than by weakening the
+  # rule.
+  # `bring dich um` is not here. It is the one phrase in this pack whose meaning
+  # is decided by the word in front of it, so it is matched by the regex rule
+  # below instead, where that word can be named.
+  - id: de.harassment.self-harm
+    term: geh dich umbringen
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      # `spring von der brücke` and `spring vor die bahn` were drafted here and
+      # removed: Minecraft has bridges and it has rails, so both name something
+      # inside the game.
+      - geh dich aufhängen
+      - geh dich aufhangen
+      - häng dich auf
+      - hang dich auf
+      - häng dich endlich auf
+      - hang dich endlich auf
+      - erhäng dich
+      - erhang dich
+      - spring vor den zug
+      - spring vom hochhaus
+      - ritz dich
+      - schneid dir die adern auf
+      - schneid dir die pulsadern auf
+    context_required: false
+  # The only `regex` rule in any pack, and the schema's regex match type exists
+  # for exactly this: "kill yourself" and "I'll kill you" are the same three
+  # German words, distinguished only by whether `ich` stands in front. An
+  # `exact` rule cannot say "not preceded by", and the `allow:` list can only say
+  # "suppress everything here", which suppressed the threat too.
+  #
+  # The optional adverb is what lets `bring dich doch um`, `bring dich endlich
+  # um` and `bring dich selbst um` be listed again: all three were deleted from
+  # this pack because an allow entry could not cover their prefixes, and all
+  # three are ordinary harassment. `probe` is verified by the loader, so this
+  # pattern cannot go quietly dead the way an unreachable regex otherwise does.
+  - id: de.harassment.self-harm-imperative
+    term: (?<!ich )\bbring dich (?:doch |endlich |einfach |selbst |lieber )?um\b
+    category: harassment
+    severity: 3
+    match: regex
+    probe: bring dich um
+    variants: []
+    context_required: false
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: de.harassment.self-harm-disclosure
+    term: ich will mich umbringen
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - ich bringe mich um
+      - ich bring mich um
+      - ich will nicht mehr leben
+      - ich will sterben
+      - ich ritze mich
+      - kms
+      - niemand würde mich vermissen
+      - niemand wurde mich vermissen
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare `scheiße` and
+  # bare `arschloch` are deliberately absent, because in German voice chat they
+  # are punctuation and none of the five categories fits them.
+  - id: de.harassment.abuse
+    term: halt die fresse
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - halt dein maul
+      - halt die schnauze
+      - fick dich
+      - fick dich ins knie
+      - fick deine mutter
+      - verpiss dich
+      - hurensohn
+      - du hurensohn
+      - hurensöhne
+      - hurensohne
+      - wichser
+      - du wichser
+      - du arschloch
+      - du missgeburt
+      - deine mutter ist eine hure
+    context_required: false
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing a
+  # repeat offender, not worth a mute the first time.
+  - id: de.harassment.insult
+    term: du bist dumm
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - du bist so dumm
+      - du bist ein idiot
+      - du bist ein loser
+      - du bist nutzlos
+      - du bist wertlos
+      - du bist peinlich
+      - keiner mag dich
+      - niemand mag dich
+      - alle hassen dich
+      - du opfer
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a front door, a home, a family, a pistol.
+  - id: de.threat.violence
+    term: ich weiß wo du wohnst
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ich weiss wo du wohnst
+      - ich kenne deine adresse
+      - ich habe deine adresse
+      - ich hab deine adresse
+      - ich weiß wo du zur schule gehst
+      - ich weiss wo du zur schule gehst
+      - ich komme zu dir nach hause
+      - ich komm zu dir nach hause
+      - ich stehe vor deiner tür
+      - ich stehe vor deiner tur
+      - ich töte deine familie
+      - ich tote deine familie
+      - ich bringe eine pistole mit
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `ich erschieß dich` is
+  # what a player says holding a bow and `ich mach dich fertig` is trash talk in
+  # every lobby. Review tier keeps the signal for staff without muting a player
+  # for describing combat.
+  - id: de.threat.violence-ambiguous
+    term: ich stech dich ab
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ich steche dich ab
+      - ich erschieß dich
+      - ich erschiesse dich
+      - ich schlag dich zusammen
+      - ich schlage dich zusammen
+      - ich mach dich fertig
+      # "I'll kill you". This matched *nothing at all* while it sat in `allow:`
+      # -- the entry that stopped the self-harm rule misfiring on it also stopped
+      # every other rule seeing it. Every comparable pack carries the phrase
+      # here: fr `je vais te tuer`, it `ti ammazzo`, es `te voy a matar`, pt `vou
+      # te matar`, hr `ubit cu te`. Both spellings, because the transcriber
+      # writes the clipped and the full verb.
+      - ich bring dich um
+      - ich bringe dich um
+    context_required: true
+  - id: de.threat.mass-violence
+    term: ich mache einen amoklauf
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ich mach einen amoklauf
+      - amoklauf an meiner schule
+      - ich erschieße die ganze schule
+      - ich erschiesse die ganze schule
+      - ich bringe eine pistole mit in die schule
+      - ich sprenge die schule in die luft
+      - ich jage die schule in die luft
+    context_required: false
+  - id: de.threat.sexual-violence
+    term: ich vergewaltige dich
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ich werde dich vergewaltigen
+      - ich vergewaltige deine mutter
+      - ich vergewaltige deine schwester
+    context_required: false
+  # Armed police at a child's front door. There is no gameplay reading of an SEK
+  # callout, so this stays at severity 3 and is kept separate from doxxing.
+  - id: de.threat.swatting
+    term: ich schicke dir das sek
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ich schick dir das sek
+      - ich schicke dir die polizei nach hause
+      - ich schick dir die polizei nach hause
+      - ich swatte dich
+    context_required: false
+  - id: de.threat.doxxing
+    term: ich doxxe dich
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ich doxe dich
+      - ich leake deine adresse
+      - ich poste deine adresse
+      - ich stelle deine adresse online
+      - ich veröffentliche deine adresse
+      - ich veroffentliche deine adresse
+    context_required: false
+  # In Minecraft an IP is the server address every player types to connect, so
+  # "ich hab deine ip" is a helpful sentence as often as it is a threat.
+  - id: de.threat.doxxing-ip
+    term: ich hab deine ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ich habe deine ip
+      - ich kenne deine ip
+      - ich leake deine ip
+      - ich ddose dich
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: de.sexual.explicit
+    term: lutsch meinen schwanz
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - lutsch meine eier
+      - blas mir einen
+      - ich will dich ficken
+      - ich will mit dir ficken
+      - zeig mir deine titten
+      - zeig mir deine möpse
+      - zeig mir deine mopse
+      - zeig mir deine muschi
+      - schick nudes
+      - schick mir nudes
+      - schick mir nacktbilder
+      - schick mir ein nacktbild
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these catch the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: de.sexual.grooming
+    term: sag es nicht deinen eltern
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - sag deinen eltern nichts
+      - sag es nicht deiner mutter
+      - erzähl es nicht deinen eltern
+      - erzahl es nicht deinen eltern
+      - sag es niemandem
+      - das bleibt unser geheimnis
+      - das ist unser kleines geheimnis
+      - unser kleines geheimnis
+      - zieh dich aus
+      - zieh deine klamotten aus
+      - zieh deine sachen aus
+    context_required: false
+  # The same approach where it is still ambiguous, plus the one phrase a
+  # Minecraft player uses about armour: `bist du nackt` means "are you wearing
+  # armour" on any survival server.
+  - id: de.sexual.grooming-signal
+    term: bist du alleine zuhause
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - bist du allein zuhause
+      - bist du alleine zu hause
+      - bist du allein zu hause
+      - sind deine eltern zuhause
+      - sind deine eltern zu hause
+      - ist deine mutter zuhause
+      - ist deine mutter zu hause
+      - bist du nackt
+      - wie alt bist du wirklich
+      - du bist so reif für dein alter
+      - du bist so reif fur dein alter
+      - schick mir ein bild von dir
+      - schick mir bilder
+      - schick mir fotos
+      - adde mich auf snap
+      - adde mich auf snapchat
+      - mach deine kamera an
+      - mach mal die kamera an
+    context_required: true

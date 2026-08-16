@@ -1,0 +1,10 @@
+# Run rule packs from a host directory instead of the ones baked into the image.
+#
+#     VOICESNIFFER_RULES_DIR_HOST=/absolute/path/to/rules \
+#       docker compose -f docker-compose.yml -f docker-compose.rules.yml up -d
+services:
+  processor:
+    environment:
+      VOICESNIFFER_RULES_DIR: /rules
+    volumes:
+      - ${VOICESNIFFER_RULES_DIR_HOST:?set VOICESNIFFER_RULES_DIR_HOST to a directory of .yml rule packs}:/rules:ro

@@ -1,0 +1,82 @@
+schema = 2
+
+[[models]]
+id = "moonshine-tiny-v2-en"
+family = "moonshine-v2"
+archive_url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2"
+archive_sha256 = "9ec31b342d8fa3240c3b81b8f82e1cf7e3ac467c93ca5a999b741d5887164f8d"
+archive_root = "sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27"
+languages = ["en"]
+license_name = "MIT"
+license_url = "https://huggingface.co/csukuangfj2/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/blob/main/LICENSE"
+files = { encoder = "encoder_model.ort", decoder = "decoder_model_merged.ort", tokens = "tokens.txt" }
+
+[[models]]
+id = "moonshine-base-v2-en"
+family = "moonshine-v2"
+archive_url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-base-en-quantized-2026-02-27.tar.bz2"
+archive_sha256 = "43232c1d13013d37317163baec3135bd771a186a4356f28c889bab453bb0e891"
+archive_root = "sherpa-onnx-moonshine-base-en-quantized-2026-02-27"
+languages = ["en"]
+license_name = "MIT"
+license_url = "https://huggingface.co/csukuangfj2/sherpa-onnx-moonshine-base-en-quantized-2026-02-27/blob/main/LICENSE"
+files = { encoder = "encoder_model.ort", decoder = "decoder_model_merged.ort", tokens = "tokens.txt" }
+
+[[models]]
+id = "parakeet-tdt-0.6b-v3-int8"
+family = "nemo-transducer"
+archive_url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2"
+archive_sha256 = "5793d0fd397c5778d2cf2126994d58e9d56b1be7c04d13c7a15bb1b4eafb16bf"
+archive_root = "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8"
+languages = ["bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk"]
+license_name = "CC-BY-4.0"
+license_url = "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3"
+files = { encoder = "encoder.int8.onnx", decoder = "decoder.int8.onnx", joiner = "joiner.int8.onnx", tokens = "tokens.txt" }
+
+# The fp32 export of the *same checkpoint* as the int8 entry above. Measured on
+# a 520-utterance Common Voice corpus pushed through the real Opus path, it
+# takes English WER from 28.1% to 5.8% and Czech from 25.7% to 10.2%, and the
+# int8 build's habit of returning an empty transcript for one English utterance
+# in five (52/260) drops to 1/260. See docs/stt-model-selection.md.
+#
+# Fetched as loose files rather than an archive because upstream publishes no
+# tarball for it, and it cannot be re-published as one either: the archive is
+# 2.21 GiB, over GitHub's 2 GiB per-asset ceiling, and xz only reaches ~2.19 GiB.
+# The URL names an immutable git revision of the same publisher's repository as
+# the int8 build, and every file carries its own SHA-256 -- including
+# `encoder.weights`, the 2.4 GB of ONNX external data that the archive form
+# could not have verified because `files` only names the four loader roles.
+# Digests were computed from the downloaded bytes and independently cross-checked
+# against Hugging Face's own LFS object ids for that revision.
+[[models]]
+id = "parakeet-tdt-0.6b-v3-fp32"
+family = "nemo-transducer"
+base_url = "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3/resolve/1a468a35cbba69418f126de829e75261dea4a4e4"
+languages = ["bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk"]
+license_name = "CC-BY-4.0"
+license_url = "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3"
+files = { encoder = "encoder.onnx", decoder = "decoder.onnx", joiner = "joiner.onnx", tokens = "tokens.txt" }
+downloads = [
+  { path = "encoder.onnx", sha256 = "3eed7ce424bf8339ad09233533c687e2dbd07e74ccf5027b5e7344019ea373b0" },
+  { path = "encoder.weights", sha256 = "3af3f51af5f2d01dbbf5af47d42c7962a2c205f11004254bb4f2b979862f39a8" },
+  { path = "decoder.onnx", sha256 = "d593cdb0e571f5a457ec2219af9968cbf6b0e8198e8f7839b40a8754593bf68c" },
+  { path = "joiner.onnx", sha256 = "b9b0bcf88ac571902e69a6536223ed2d94885e981b85045410f1403d53121a63" },
+  { path = "tokens.txt", sha256 = "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d" },
+]
+
+# Declared as the same 25 as Parakeet, which under-claims: Whisper's tokenizer
+# carries 99 languages and it takes an explicit `language` argument, unlike the
+# transducer branch. That matters if Turkish is ever wanted, because this is the
+# only shipped model that can do it -- at 13.5% English and 45.2% Czech word
+# error against Parakeet fp32's 5.8% and 10.2%, so not as a replacement. Adding
+# a language here also needs it in model_store._LANGUAGES.
+[[models]]
+id = "whisper-small-multilingual-int8"
+family = "whisper"
+archive_url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-small.tar.bz2"
+archive_sha256 = "486a46afbb7ba798507190ffe02fea2dd726049af212e774537efac6afb210a6"
+archive_root = "sherpa-onnx-whisper-small"
+languages = ["bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk"]
+license_name = "MIT"
+license_url = "https://github.com/openai/whisper/blob/main/LICENSE"
+files = { encoder = "small-encoder.int8.onnx", decoder = "small-decoder.int8.onnx", tokens = "small-tokens.txt" }

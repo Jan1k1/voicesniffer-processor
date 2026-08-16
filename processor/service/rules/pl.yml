@@ -1,0 +1,610 @@
+version: 1
+language: pl
+# See en.yml for the pack-wide policy and cs.yml for how a Slavic pack is built.
+# Four things are specific to Polish.
+#
+# **Nothing here is fuzzy, and that is a measured call rather than caution.**
+# Polish has 302,100 stems in pl_PL.dic and dense consonant frames, so a fuzzy
+# pattern reaches ordinary vocabulary in one step. `cwel` is four characters, so
+# the budget is one differing run, and one vowel makes it `cwal` -- which is
+# `cwał`, gallop, as a transcriber that drops the bar writes it. `peder` in the
+# sister packs is one vowel from `puder`, an ordinary word in four of the five
+# languages in this group. Neither is a hypothetical: both came out of the
+# dictionary sweep before either pattern was written. Every rule below is
+# `exact`, and the cost is obfuscation recall.
+#
+# **`ł` is not a combining mark, so it survives de-accenting.** NFKD folds
+# `ą ć ę ń ó ś ź ż` to their base letters and leaves `ł` alone, so the twin of
+# `subskrybuj mój kanał` is `subskrybuj moj kanał` and not the all-ASCII
+# spelling. Both are listed wherever a term carries `ł`: the middle form is what
+# the twin test asks for, the ASCII form is what a transcriber that drops
+# everything actually emits. Terms were chosen to avoid `ł` where an equally
+# idiomatic word existed, which is why the insult rule says `żenujący` rather
+# than `żałosny`.
+#
+# **`pedał` is the ordinary word for a bicycle pedal** in Polish, Slovak, Czech,
+# Slovene and English, and `ciota` is the colloquial word for an aunt. Both are
+# also slurs. They are review tier; the directed `ty pedale` carries the action.
+# `cygan` is the traditional ethnonym, a common surname, and the stem of
+# `cyganić`, to fib, so the whole family is review tier and only `ty cyganie`
+# acts. `murzyn` is contested rather than settled and is review tier for the same
+# reason `negr` is in cs.yml.
+#
+# Native review still outstanding on the register calls, on whether `ciapaty`
+# belongs above the review tier, and on the casual-homophobia phrasings, which
+# are the ones a non-native ear gets wrong most often.
+allow:
+  # `zabij się` is also how a Polish player says "die so you respawn at the bed".
+  # The phrase is the most valuable harassment term in the pack, so the game
+  # reading is carved out rather than the rule weakened. `zabij się` alone still
+  # flags.
+  - zabij się i respawnij
+  - zabij sie i respawnij
+  - zabij się żeby się respawnować
+  - zabij sie zeby sie respawnowac
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: pl.spam.server-ad
+    term: wbijaj na mój serwer
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - wbijaj na moj serwer
+      - wbij na mój serwer
+      - wbij na moj serwer
+      - wejdź na mój serwer
+      - wejdz na moj serwer
+      - chodź na mój serwer
+      - chodz na moj serwer
+      - moje ip to
+      - ip mojego serwera to
+    context_required: false
+  # Review tier for the same reason as en.yml: a server that runs its own Discord
+  # hears "wbijaj na mój discord" as ordinary talk, and a warn for it is a warn.
+  - id: pl.spam.community-ad
+    term: wbijaj na mój discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - wbijaj na moj discord
+      - wejdź na mój discord
+      - wejdz na moj discord
+    context_required: true
+  # Servers run real giveaways, so the whole family is review tier: staff see the
+  # claim and decide whether it is theirs.
+  - id: pl.spam.free-items
+    term: darmowe diamenty
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - diamenty za darmo
+      - darmowe rangi
+      - darmowa ranga
+      - darmowe robuxy
+      - kliknij w link
+      - kliknij w mój link
+      - kliknij w moj link
+    context_required: true
+  - id: pl.spam.self-promo
+    term: subskrybuj mój kanał
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - subskrybuj moj kanał
+      - subskrybuj moj kanal
+      - zasubskrybuj mój kanał
+      - zasubskrybuj moj kanał
+      - zasubskrybuj moj kanal
+      - zobacz mój kanał
+      - zobacz moj kanał
+      - zobacz moj kanal
+      - daj suba
+      - zostaw suba
+      - wejdź na mój youtube
+      - wejdz na moj youtube
+      - obserwuj mnie na twitchu
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The homophobic terms with no ordinary reading. `cwel` stays `exact`: at four
+  # characters the fuzzy budget is one differing run, and one vowel turns it into
+  # `cwal`, which is how a transcriber that drops the bar writes `cwał`, gallop.
+  - id: pl.hate.homophobic
+    term: cwel
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cwele
+      - cwela
+      - cwelu
+      - cwelem
+      - cwelami
+      - cwelów
+      - cwelow
+    context_required: false
+  # `pedał` is a bicycle pedal in five of the languages a server may have enabled
+  # at once, and `ciota` is what a Pole calls an aunt. Both are also slurs, and
+  # neither can be told apart from its ordinary reading by a token matcher.
+  # Review tier; `ty pedale` below carries the action. The all-ASCII `pedal` and
+  # `pedaly` are listed on purpose even though `ł` survives de-accenting, because
+  # a transcript that has lost the bar is exactly the case this rule is for.
+  #
+  # `pedzio` is here rather than with `cwel` for a narrower reason: `Pędzio` is
+  # an ordinary nickname and it de-accents onto exactly this token, so the slur
+  # and the nickname are the same string once the transcriber has dropped the
+  # ogonek.
+  - id: pl.hate.homophobic-ambiguous
+    term: pedał
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pedały
+      - pedała
+      - pedałem
+      - pedale
+      - pedal
+      - pedaly
+      - pedzio
+      - pedzia
+      - pedziem
+      - ciota
+      - cioty
+      - ciotą
+      - ciocie
+    context_required: true
+  # `Cygan` is the traditional ethnonym, a common Polish surname, and the stem of
+  # `cyganić`, to fib. Review tier for the whole family; only `ty cyganie` acts.
+  - id: pl.hate.roma
+    term: cygan
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cygana
+      - cyganowi
+      - cyganem
+      - cyganie
+      - cyganów
+      - cyganow
+      - cyganami
+      - cyganka
+      - cyganki
+      - cygańska
+      - cyganska
+    context_required: true
+  - id: pl.hate.racial
+    term: czarnuch
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - czarnucha
+      - czarnuchowi
+      - czarnuchu
+      - czarnuchem
+      - czarnuchy
+      - czarnuchów
+      - czarnuchow
+      - czarnuchami
+    context_required: false
+  # `murzyn` is contested rather than settled: widely read as offensive now, and
+  # still used without malice by exactly the age group on these servers. It is
+  # also a Polish surname. `ciapaty` reads as a slur but is one suffix from
+  # `ciapa`, an ordinary word for a clumsy person, so it sits here too rather
+  # than in the rule above.
+  - id: pl.hate.racial-ambiguous
+    term: murzyn
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - murzyna
+      - murzynowi
+      - murzynem
+      - murzyni
+      - murzynów
+      - murzynow
+      - murzynami
+      - murzynie
+      - ciapaty
+      - ciapaci
+      - ciapatego
+      - ciapatym
+    context_required: true
+  - id: pl.hate.slur-directed
+    term: ty czarnuchu
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ty cyganie
+      - ty murzynie
+      - ty pedale
+      - ty cwelu
+      - ty ciapaty
+      - ty żydku
+      - ty zydku
+    context_required: false
+  - id: pl.hate.antisemitic
+    term: żydzi do gazu
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zydzi do gazu
+      - żydów do gazu
+      - zydow do gazu
+      - hajl hitler
+      - heil hitler
+      - sieg heil
+      - żydek
+      - zydek
+      - żydki
+      - zydki
+      - żydkiem
+      - zydkiem
+    context_required: false
+  # `upośledzony` is also the clinical and legal word, so a sentence about a
+  # disability is one of the readings this rule reaches. Review tier. The
+  # directed insult a Polish player actually uses is `debil`, and that lives in
+  # the harassment rule below where the register fits.
+  - id: pl.hate.ableist
+    term: upośledzony
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - uposledzony
+      - upośledzona
+      - uposledzona
+      - upośledzeni
+      - uposledzeni
+      - upośledzonym
+      - uposledzonym
+    context_required: true
+  # Pejorative "gej" is ubiquitous and ambiguous in this register, exactly as
+  # "gay" is in en.yml. Review tier: what a moderator wants here is a pattern
+  # building up, not a mute.
+  - id: pl.hate.homophobic-casual
+    term: jesteś gejem
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - jestes gejem
+      - ale gej
+      - ty gej
+      - to jest gejowe
+      - ale gejowe
+      - takie gejowe
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: pl.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `zabij się` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file rather than by weakening the rule.
+  # `zdechnij` is deliberately absent: it is ordinary PvP speech in this game.
+  - id: pl.harassment.self-harm
+    term: zabij się
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - zabij sie
+      - idź się zabić
+      - idz sie zabic
+      - powieś się
+      - powies sie
+      - skocz pod pociąg
+      - skocz pod pociag
+      - skocz z mostu
+      - podetnij sobie żyły
+      - podetnij sobie zyły
+      - podetnij sobie zyly
+      - odbierz sobie życie
+      - odbierz sobie zycie
+      - napij się wybielacza
+      - napij sie wybielacza
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: pl.harassment.death-wish-ambiguous
+    term: mam nadzieję że umrzesz
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - mam nadzieje ze umrzesz
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: pl.harassment.self-harm-disclosure
+    term: chcę się zabić
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - chce sie zabic
+      - chcę umrzeć
+      - chce umrzec
+      - nie chcę już żyć
+      - nie chce juz zyc
+      - tnę się
+      - tne sie
+      - kms
+      - nikt by za mną nie tęsknił
+      - nikt by za mna nie tesknił
+      - nikt by za mna nie tesknil
+    context_required: true
+  # Directed abuse, five-minute mute. Bare `kurwa` is deliberately absent for the
+  # same reason bare swearing is absent from en.yml and cs.yml: in Polish voice
+  # chat it is punctuation, and filtering it produces noise rather than
+  # moderation. Only the directed forms are here.
+  - id: pl.harassment.abuse
+    term: spierdalaj
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - wypierdalaj
+      - odpierdol się
+      - odpierdol sie
+      - pierdol się
+      - pierdol sie
+      - ty debilu
+      - jesteś debilem
+      - jestes debilem
+      - ty kurwo
+      - ty chuju
+      - ty skurwysynu
+      - ty pizdo
+      - ty ciulu
+      - zamknij ryj
+      - zamknij mordę
+      - zamknij morde
+    context_required: false
+  - id: pl.harassment.insult
+    term: jesteś żenujący
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - jestes zenujacy
+      - jesteś do niczego
+      - jestes do niczego
+      - jesteś idiotą
+      - jestes idiota
+      - ty frajerze
+      - nikt cię nie lubi
+      - nikt cie nie lubi
+      - wszyscy cię nienawidzą
+      - wszyscy cie nienawidza
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: pl.threat.violence
+    term: wiem gdzie mieszkasz
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - znam twój adres
+      - znam twoj adres
+      - znalazłem twój adres
+      - znalazłem twoj adres
+      - znalazlem twoj adres
+      - przyjdę do ciebie do domu
+      - przyjde do ciebie do domu
+      - zabiję twoją rodzinę
+      - zabije twoja rodzine
+      - wiem do jakiej szkoły chodzisz
+      - wiem do jakiej szkoly chodzisz
+      - przyniosę jutro broń
+      - przyniose jutro bron
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Every one of these is
+  # something a player says about a fight, so they are review tier: staff keep
+  # the signal, nobody is muted for describing combat.
+  - id: pl.threat.violence-ambiguous
+    term: zastrzelę cię
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - zastrzele cie
+      - znajdę cię i zabiję
+      - znajde cie i zabije
+      - rozwalę ci ryj
+      - rozwale ci ryj
+      - rozwalę ci mordę
+      - rozwale ci morde
+    context_required: true
+  # Every variant names the target. `wysadzę` with no object fires on a player
+  # blowing up a build with TNT, which is what the game is for.
+  - id: pl.threat.mass-violence
+    term: zastrzelę wszystkich w szkole
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - zastrzele wszystkich w szkole
+      - wysadzę szkołę
+      - wysadze szkołe
+      - wysadze szkole
+      - przyniosę broń do szkoły
+      - przyniose bron do szkoły
+      - przyniose bron do szkoly
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: pl.threat.mass-violence-ambiguous
+    term: strzelanina w szkole
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: pl.threat.sexual-violence
+    term: zgwałcę cię
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - zgwałce cie
+      - zgwalce cie
+      - zgwałcę twoją matkę
+      - zgwałce twoja matke
+      - zgwalce twoja matke
+    context_required: false
+  - id: pl.threat.doxxing
+    term: wrzucę twój adres
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - wrzuce twoj adres
+      - opublikuję twój adres
+      - opublikuje twoj adres
+      - wyślę twój adres
+      - wysle twoj adres
+      - zdoxuję cię
+      - zdoxuje cie
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "mam twoje ip" is a helpful sentence on most servers. Review tier, exactly as
+  # in en.yml and cs.yml.
+  - id: pl.threat.doxxing-ip
+    term: mam twoje ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - znam twoje ip
+      - zddosuję cię
+      - zddosuje cie
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: pl.sexual.explicit
+    term: obciągnij mi
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - obciagnij mi
+      - possij mi
+      - chcę cię przelecieć
+      - chce cie przeleciec
+      - pokaż cycki
+      - pokaz cycki
+      - pokaż mi cipkę
+      - pokaz mi cipke
+      - wyślij nudes
+      - wyslij nudes
+      - wyślij nudesy
+      - wyslij nudesy
+      - wyślij nagie zdjęcia
+      - wyslij nagie zdjecia
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these catch the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: pl.sexual.grooming
+    term: nie mów rodzicom
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nie mow rodzicom
+      - nie mów mamie
+      - nie mow mamie
+      - nie mów nikomu o tym
+      - nie mow nikomu o tym
+      - to nasza tajemnica
+      - to nasz sekret
+      - niech to zostanie między nami
+      - niech to zostanie miedzy nami
+      - rozbierz się
+      - rozbierz sie
+      - zdejmij ubranie
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrases a
+  # Minecraft player uses about armour: `jesteś nagi` means "you have no armour
+  # on" on any survival server. `ile masz lat` is an ordinary question. Review
+  # tier -- a moderator reading three of these from one account has what they
+  # need.
+  - id: pl.sexual.grooming-signal
+    term: jesteś sam w domu
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - jestes sam w domu
+      - jesteś sama w domu
+      - jestes sama w domu
+      - są rodzice w domu
+      - sa rodzice w domu
+      - czy mama jest w domu
+      - ile masz lat
+      - jesteś nagi
+      - jestes nagi
+      - jesteś naga
+      - jestes naga
+      - wyślij mi zdjęcie
+      - wyslij mi zdjecie
+      - wyślij mi zdjęcia
+      - wyslij mi zdjecia
+      - dodaj mnie na snapie
+      - dodaj mnie na snapchacie
+      - włącz kamerę
+      - włacz kamere
+      - wlacz kamere
+    context_required: true

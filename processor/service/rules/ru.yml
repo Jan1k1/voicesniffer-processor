@@ -1,0 +1,652 @@
+version: 1
+language: ru
+# See en.yml for the pack-wide policy. Five things are specific to Russian.
+#
+# **The script is Cyrillic and it has to be real Cyrillic.** `а е о р с у х` and
+# their capitals have Latin twins that are identical in every font, and a pattern
+# carrying one Latin letter loads clean, sweeps clean and never fires. Nothing in
+# the toolchain reports it. Every character in every pattern below was checked by
+# codepoint: each is in U+0400..U+04FF or is a space, with one deliberate
+# exception, the Latin `ip` in ru.threat.doxxing-ip, which is Latin because that
+# is what the transcriber writes when a player says the two letters.
+#
+# **`й` and `ё` carry combining marks, so the twin test asks for spellings that
+# are not Russian.** `test_consonant_marked_terms_ship_a_de_accented_twin` runs
+# NFKD over every pattern and drops the combining characters, and NFKD takes `й`
+# to `и` and `ё` to `е`. The `ё`/`е` pair is real and worth having: Russian
+# writing drops the diaeresis constantly and the transcriber emits `пошел` far
+# more often than `пошёл`. The `й`/`и` pair is not real. Nobody says `мои сервер`
+# for `мой сервер`, and no transcriber writes it. Those twins are listed anyway,
+# because the test folds a breve exactly as it folds a caron and cannot be told
+# the difference from inside a pack file. They cost a line each and they fire on
+# nothing.
+#
+# **Fuzzy on Cyrillic tolerates elongation and nothing else.** `_is_vowel` asks
+# whether the NFKD base of a character is in `aeiouy`; no Cyrillic letter is, so
+# `_fuzzy_token_matches` never reaches its vowel-swap branch on this pack and a
+# differing run must be the same letter at a different length. The accept set of
+# `пидорас` is `пидорас` with up to two letters held down, which is exactly the
+# obfuscation the rule exists for and nothing besides.
+#
+# That is also why `ниггер` is *not* fuzzy. `гг` is a single run, so `нигер`
+# differs from `ниггер` by one run length and sits inside the accept set: a fuzzy
+# `ниггер` flags the country and the river. Measured, not assumed --
+# `_fuzzy_token_matches('ниггер', ..., 'нигер', ...)` returns True. It is the
+# `niger` collision from en.yml in a different alphabet, and here it is cheaper
+# to list the slur exactly than to carve the country back out.
+#
+# **Russian mat is productive and most of it is punctuation in this register.**
+# `бля`, `блядь`, `хуй`, `пиздец` and the `ебать` stem generate both severe
+# insults and ordinary intensifiers, and on a voice channel full of teenagers the
+# intensifier is the common reading. Bare profanity is therefore not listed at
+# all, the same call en.yml and cs.yml make. Only directed forms are listed, and
+# `иди нахуй` is here because it is aimed at a person, not because it is coarse.
+#
+# **Minecraft vocabulary.** `ты голый` means "you have no armour on", `айпи` is
+# the server address every player types to connect, and `убей себя` is how a
+# player says "die and respawn". The last is carved out by the allow entries
+# below rather than by weakening the rule.
+#
+# Native review still outstanding on the register calls: whether `негр`, `хохол`,
+# `чурка` and `жид` sit correctly at review tier, whether `ты хохол` belongs at
+# mute tier on a server with Russian and Ukrainian players in the same channel,
+# and whether the doxxing phrasings read as threats to a Russian speaker.
+allow:
+  # `убей себя` is also how a player says "reset your spawn point". The phrase is
+  # the most valuable harassment term in the pack, so the game reading is carved
+  # out rather than the rule weakened. `убей себя` alone still flags.
+  - убей себя чтобы респавнуться
+  - убей себя и респавнись
+  - убейся чтобы респавнуться
+  - убейся и респавнись
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: ru.spam.server-ad
+    term: заходи ко мне на сервер
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - заходите ко мне на сервер
+      - приходи ко мне на сервер
+      - заходи на мой сервер
+      - заходи на мои сервер
+      - заходите на мой сервер
+      - заходите на мои сервер
+      - айпи моего сервера
+      - аипи моего сервера
+      - вот айпи сервера
+      - вот аипи сервера
+    context_required: false
+  # Review tier for the same reason as en.spam.community-ad: a server that runs
+  # its own Discord hears "заходи ко мне в дискорд" as ordinary talk.
+  - id: ru.spam.community-ad
+    term: заходи ко мне в дискорд
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - заходи в мой дискорд
+      - заходи в мои дискорд
+      - заходите в мой дискорд
+      - заходите в мои дискорд
+    context_required: true
+  - id: ru.spam.free-items
+    term: алмазы бесплатно
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - бесплатные алмазы
+      - раздаю алмазы
+    context_required: true
+  # Servers run real giveaways and real donation stores, so this is review tier:
+  # staff see the claim and decide whether it is theirs.
+  - id: ru.spam.giveaway-scam
+    term: бесплатный донат
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - бесплатныи донат
+      - бесплатные ранги
+      - бесплатные робуксы
+      - переходи по ссылке
+      - переходите по ссылке
+      - жми на ссылку
+      - кликни по ссылке
+    context_required: true
+  - id: ru.spam.self-promo
+    term: подпишись на мой канал
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - подпишись на мои канал
+      - подпишитесь на мой канал
+      - подпишитесь на мои канал
+      - подпишись на мой ютуб
+      - подпишись на мои ютуб
+      - подпишись на меня
+      - загляни на мой канал
+      - загляни на мои канал
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The one fuzzy rule in this pack. Seven single-letter runs over a frame with
+  # no Russian neighbour, and on Cyrillic the accept set is only these letters
+  # with up to two of them held down. The 146k-stem sweep finds nothing in it.
+  - id: ru.hate.homophobic
+    term: пидорас
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - пидарас
+      - пидорасы
+      - пидарасы
+      - пидораса
+      - пидараса
+      - пидорасов
+      - пидарасов
+      - пидорасам
+    context_required: false
+  # The declensions equal run counts cannot reach, plus the shorter stems. Listed
+  # exactly: `пидор` is five characters, which is budget 1, and a five-letter
+  # Cyrillic frame is close enough to ordinary vocabulary that the accept set
+  # would want enumerating before it could be trusted.
+  - id: ru.hate.homophobic-listed
+    term: пидор
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - пидоры
+      - пидора
+      - пидору
+      - пидором
+      - пидоре
+      - пидоров
+      - пидорам
+      - пидорах
+      - педик
+      - педики
+      - педика
+      - педику
+      - педиком
+      - педиков
+      - педикам
+      - гомосек
+      - гомосеки
+    context_required: false
+  # Pejorative "гей" is ubiquitous and ambiguous in this register, exactly like
+  # `thats gay` in en.yml. Review tier: what a moderator wants is the pattern
+  # building up over a week, not a mute on the first one.
+  - id: ru.hate.homophobic-casual
+    term: ты гей
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - ты геи
+      - ты что гей
+      - ты что геи
+      - ты чё гей
+      - ты че гей
+      - ты че геи
+      - он гей
+      - он геи
+      - вы геи
+    context_required: true
+  - id: ru.hate.slur-racial
+    term: черножопый
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - черножопыи
+      - черножопые
+      - черножопых
+      - черножопым
+      - черножопая
+      - узкоглазый
+      - узкоглазыи
+      - узкоглазые
+      - узкоглазых
+      - ниггер
+      - ниггеры
+      - ниггера
+      - ниггеров
+      - ниггерам
+      - хач
+      - хачи
+      - хача
+      - хачик
+      - хачики
+    context_required: false
+  # Every term here has an ordinary Russian reading that a player can reach
+  # without malice. `чурка` is a block of firewood and `чурбан` is a log, both
+  # everyday nouns. `хохол` is the tuft of hair on a bird's head. `негр` was the
+  # neutral register word for most of a century and is still what a great many
+  # speakers use without meaning anything by it. `жид` is the ordinary,
+  # non-pejorative word for a Jew in Polish and in older western Ukrainian usage,
+  # and a server can have both packs enabled at once. Review tier for all of
+  # them: staff see every one, nobody is muted by one.
+  - id: ru.hate.slur-ambiguous
+    term: негр
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - негра
+      - негру
+      - негром
+      - негре
+      - негры
+      - негров
+      - неграм
+      - неграх
+      - чурка
+      - чурки
+      - чурку
+      - чурок
+      - чурбан
+      - чурбаны
+      - хохол
+      - хохла
+      - хохлы
+      - хохлов
+      - жид
+      - жиды
+      - жида
+      - жидом
+      - жидов
+    context_required: true
+  # The directed forms carry the automatic action, because "ты чурка" is not a
+  # sentence about firewood. Same split as cs.hate.slur-directed.
+  - id: ru.hate.slur-directed
+    term: ты негр
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ты чурка
+      - ты чурбан
+      - ты хохол
+      - ты жид
+      - ты хач
+      - ты черножопый
+      - ты черножопыи
+      - ты узкоглазый
+      - ты узкоглазыи
+    context_required: false
+  - id: ru.hate.antisemitic
+    term: жидов в печь
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - евреев в печь
+      - хайль гитлер
+      - хаиль гитлер
+      - зиг хайль
+      - зиг хаиль
+      - жидовская морда
+      - грязный жид
+      - грязныи жид
+    context_required: false
+  # `даун` and `дебил` are the two generic insults of Russian schoolyard speech
+  # and neither is aimed at a disabled person most of the time it is said. Bare
+  # mention is review tier, the directed rule below carries the action. Same
+  # split, and the same reasoning, as en.hate.ableist.
+  - id: ru.hate.ableist
+    term: даун
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - дауны
+      - дауна
+      - даунов
+      - даунам
+      - дебил
+      - дебилы
+      - дебила
+      - дебилов
+      - дебилам
+      - олигофрен
+      - олигофрены
+      - умственно отсталый
+      - умственно отсталыи
+    context_required: true
+  - id: ru.hate.ableist-directed
+    term: ты даун
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - ты дебил
+      - ты олигофрен
+      - тупой дебил
+      - тупои дебил
+      - конченый даун
+      - конченыи даун
+      - ты умственно отсталый
+      - ты умственно отсталыи
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: ru.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Stays at severity 3. The respawn reading is carved out by the allow entries
+  # at the top of this file rather than by weakening the rule.
+  - id: ru.harassment.self-harm
+    term: убей себя
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - убеи себя
+      - убейся
+      - убеися
+      - иди убейся
+      - иди убеися
+      - повесься
+      - иди повесься
+      - вскрой вены
+      - вскрои вены
+      - прыгни под поезд
+      - прыгни с моста
+      - выпей отбеливатель
+      - выпеи отбеливатель
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: ru.harassment.death-wish-ambiguous
+    term: сдохни
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - иди сдохни
+      - сдохни уже
+      - чтоб ты сдох
+      - лучше умри
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: ru.harassment.self-harm-disclosure
+    term: хочу себя убить
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - хочу убить себя
+      - хочу умереть
+      - не хочу больше жить
+      - я режу себя
+      - kms
+      - никто не будет по мне скучать
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: `бля` and `пиздец`
+  # are absent on purpose, because in Russian voice chat they are punctuation and
+  # none of the five categories fits them anyway.
+  - id: ru.harassment.abuse
+    term: иди нахуй
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - иди нахуи
+      - пошел нахуй
+      - пошёл нахуй
+      - пошел нахуи
+      - иди на хуй
+      - иди на хуи
+      - иди нахер
+      - пошел нахер
+      - ты мудак
+      - ты чмо
+      - ты урод
+      - ты долбоеб
+      - ты долбоёб
+      - ты уебок
+      - ты уёбок
+      - завали ебало
+      - заткни ебало
+      - заткнись нахуй
+      - заткнись нахуи
+      - ты кусок дерьма
+    context_required: false
+  # Trash talk that is directed but mild. `ты нуб` is half of every voice channel
+  # on a survival server. Review tier: worth a moderator seeing a repeat
+  # offender, not worth a mute the first time.
+  - id: ru.harassment.insult
+    term: ты лох
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - ты нуб
+      - ты днище
+      - ты бездарь
+      - ты позорище
+      - тебя никто не любит
+      - ты никому не нужен
+      - тебя все ненавидят
+      - руки из жопы
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family. Bare `я тебя убью` is
+  # deliberately absent -- it is what a player says before a PvP round.
+  - id: ru.threat.violence
+    term: я знаю где ты живешь
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - я знаю где ты живёшь
+      - я знаю твой адрес
+      - я знаю твои адрес
+      - я нашел твой адрес
+      - я нашёл твой адрес
+      - я нашел твои адрес
+      - я знаю твою школу
+      - я приду к тебе домой
+      - я приду к тебе домои
+      - я приеду к тебе домой
+      - я приеду к тебе домои
+      - я убью твою семью
+      - я убью твоих родителей
+      - я убью твоих родителеи
+      - приду к тебе со стволом
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. "я тебя пристрелю" is
+  # said with a crossbow in hand and "я найду тебя и убью" is said about the
+  # Nether. Review tier keeps the signal for staff without muting a player for
+  # describing combat, the same call en.threat.violence-ambiguous makes.
+  - id: ru.threat.violence-ambiguous
+    term: я тебя зарежу
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - я тебя пристрелю
+      - я тебя изобью
+      - я найду тебя и убью
+      - я наиду тебя и убью
+      - я тебе морду набью
+      - я тебя урою
+    context_required: true
+  - id: ru.threat.mass-violence
+    term: расстреляю школу
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - устрою стрельбу в школе
+      - приду в школу с оружием
+      - взорву школу
+      - взорву свою школу
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: ru.threat.mass-violence-ambiguous
+    term: стрельба в школе
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: ru.threat.sexual-violence
+    term: я тебя изнасилую
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - изнасилую тебя
+      - изнасилую твою мать
+      - изнасилую твою сестру
+    context_required: false
+  - id: ru.threat.doxxing
+    term: солью твой адрес
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - солью твои адрес
+      - выложу твой адрес
+      - выложу твои адрес
+      - скину твой адрес
+      - скину твои адрес
+      - я тебя задоксю
+      - задоксю тебя
+    context_required: false
+  # In Minecraft an "айпи" is the server address every player types to connect,
+  # so "я знаю твой айпи" is usually a sentence about joining. Review tier, for
+  # the same reason as en.threat.doxxing-ip. The Latin `ip` variants are
+  # deliberate: the transcriber writes the two letters in Latin about as often as
+  # it spells them out in Cyrillic.
+  - id: ru.threat.doxxing-ip
+    term: я знаю твой айпи
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - я знаю твои аипи
+      - я знаю твой ip
+      - я знаю твои ip
+      - у меня есть твой айпи
+      - у меня есть твои аипи
+      - я тебя задудосю
+      - задудосю тебя
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: ru.sexual.explicit
+    term: соси хуй
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - соси хуи
+      - соси член
+      - отсоси мне
+      - хочу тебя трахнуть
+      - покажи сиськи
+      - покажи грудь
+      - покажи киску
+      - скинь нюдсы
+      - пришли нюдсы
+      - скинь голое фото
+      - пришли голое фото
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these name the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: ru.sexual.grooming
+    term: не говори родителям
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - не говори маме
+      - не говори папе
+      - никому не говори об этом
+      - никому не рассказывай об этом
+      - никому не рассказываи об этом
+      - это будет наш секрет
+      - это наш секрет
+      - это наша тайна
+      - это наша таина
+      - сними одежду
+      - разденься для меня
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrasings a
+  # Minecraft player uses about armour: `ты голый` means "you are not wearing
+  # armour" on any survival server, and `сколько тебе лет` is a question children
+  # ask each other constantly. Review tier -- a moderator reading three of these
+  # from one account has what they need.
+  - id: ru.sexual.grooming-signal
+    term: ты дома один
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ты дома одна
+      - родители дома
+      - мама дома
+      - ты сейчас один
+      - ты сеичас один
+      - ты голый
+      - ты голыи
+      - ты голая
+      - сколько тебе лет
+      - ты взрослая для своего возраста
+      - скинь свое фото
+      - скинь своё фото
+      - пришли свое фото
+      - пришли своё фото
+      - добавь меня в снапчат
+      - включи камеру
+    context_required: true

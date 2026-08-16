@@ -1,0 +1,19 @@
+# Build from this clone instead of pulling the published image.
+#
+#     docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#     docker compose -f docker-compose.yml -f docker-compose.build.yml --profile test run --rm test
+services:
+  processor:
+    build:
+      context: ../..
+      dockerfile: processor/service/Dockerfile
+
+  test:
+    profiles: [test]
+    build:
+      context: ../..
+      dockerfile: processor/service/Dockerfile
+      target: test
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777

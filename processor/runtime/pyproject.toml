@@ -1,0 +1,39 @@
+[project]
+name = "voicesniffer-runtime"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy==2.5.1",
+    "sherpa-onnx==1.13.4",
+    "sherpa-onnx-core==1.13.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.15.22",
+]
+
+[build-system]
+requires = ["hatchling==1.31.0"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/voicesniffer_runtime"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"models.toml" = "voicesniffer_runtime/models.toml"
+"languages.toml" = "voicesniffer_runtime/languages.toml"

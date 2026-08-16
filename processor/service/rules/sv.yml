@@ -1,0 +1,543 @@
+version: 1
+language: sv
+# See en.yml for the pack-wide policy. Five things are specific to Swedish.
+#
+# **One fuzzy rule, the `svartskalle` stem.** Twelve runs over the frame
+# svrtskll, and the sv_SE.dic sweep turned up no Swedish word inside the accept
+# set. Everything else is `exact`, and the near misses are worth naming so nobody
+# re-opens the question: `blatte` at six characters accepts **blotte**, and
+# `neger` at five has a one-run budget that reaches ordinary vocabulary in every
+# direction.
+#
+# **All three of `å`, `ä`, `ö` decompose, so nearly every pattern here ships a
+# twin.** The transcriber drops the marks and `test_consonant_marked_terms_ship_a_de_accented_twin`
+# asks for the stripped spelling, so `är` pairs with `ar`, `så` with `sa`, `för`
+# with `for`. This roughly doubles the pattern count and is not optional.
+#
+# **`bög` cannot be listed on its own, because its twin is `bog`.** `bog` is an
+# ordinary Swedish word (the shoulder of an animal, the bow of a ship), an
+# ordinary English word, and the Danish word for "book". So the homophobic rules
+# here are compounds (`bögjävel`) or two-token phrases (`jävla bög`), never the
+# bare token. `din bög` was drafted and removed for the same reason: its twin
+# `din bog` is "your book" in Danish.
+#
+# **`hora` is not listed bare either.** It is the Swedish word for a prostitute
+# and it is also `hora` in Spanish and Italian, so only `din hora` and `din
+# jävla hora` are here.
+#
+# **`kys` is not in this pack.** Swedish spells the kiss `kyss`, so `kys` is not
+# ambiguous in Swedish, but it is the ordinary Danish word and da.yml may be
+# enabled on the same server.
+#
+# Native review still outstanding: whether `zigenare` is now a slur outright
+# rather than review tier, whether `håll käften` at review tier is too soft, and
+# whether `mongo` should carry the automatic action for a Swedish ear.
+allow:
+  # How a player says "die so you respawn at your bed". Both spellings, because
+  # the transcriber drops the marks about half the time.
+  - döda dig själv så du respawnar
+  - doda dig sjalv sa du respawnar
+  - döda dig själv och respawna
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: sv.spam.server-ad
+    term: kom till min server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - joina min server
+      - gå med i min server
+      - ga med i min server
+      - besök min server
+      - besok min server
+      - min server ip är
+      - min server ip ar
+    context_required: false
+  # Review tier: a server that runs its own Discord hears this all day.
+  - id: sv.spam.community-ad
+    term: joina min discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kom till min discord
+      - gå med i min discord
+      - ga med i min discord
+    context_required: true
+  - id: sv.spam.free-items
+    term: gratis diamanter
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis grejer
+    context_required: true
+  # Servers run real giveaways, so staff decide whether the offer is theirs.
+  - id: sv.spam.giveaway-scam
+    term: gratis ranks
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis rank
+      - gratis robux
+      - gratis minecoins
+      - gratis presentkort
+      - klicka på länken
+      - klicka pa lanken
+      - klicka på min länk
+      - klicka pa min lank
+    context_required: true
+  - id: sv.spam.self-promo
+    term: prenumerera på min kanal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - prenumerera pa min kanal
+      - kolla in min kanal
+      - kolla in min youtube
+      - kolla min youtube
+      - följ mig på twitch
+      - folj mig pa twitch
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `exact`, not fuzzy: at five characters the budget is one differing run and
+  # `neger` reaches ordinary vocabulary with a single vowel.
+  - id: sv.hate.nword
+    term: neger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negern
+      - negrer
+      - negrerna
+      - nigger
+      - niggers
+      - nigga
+    context_required: false
+  # The only fuzzy rule in this pack. Twelve runs over the frame svrtskll, and
+  # the sv_SE.dic sweep found no Swedish word inside the accept set.
+  - id: sv.hate.slur-ethnic
+    term: svartskalle
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - svartskallar
+    context_required: false
+  # The forms the fuzzy stem cannot carry. `blatte` is here rather than fuzzy
+  # because one vowel makes it **blotte**.
+  - id: sv.hate.slur-ethnic-listed
+    term: blatte
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - blattar
+      - blattarna
+      - blattejävel
+      - blattejavel
+      - svartskallarna
+      - arabjävel
+      - arabjavel
+    context_required: false
+  # `zigenare` was the ordinary Swedish word within living memory and `tattare`
+  # is still used descriptively by older speakers. Staff see these, nobody is
+  # muted by one.
+  - id: sv.hate.slur-ambiguous
+    term: zigenare
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zigenaren
+      - tattare
+      - tattaren
+    context_required: true
+  - id: sv.hate.slur-directed
+    term: din jävla blatte
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - din javla blatte
+      - din jävla zigenare
+      - din javla zigenare
+      - åk hem till ditt eget land
+      - ak hem till ditt eget land
+      - dra hem till ditt eget land
+    context_required: false
+  # Never the bare token: see the header on `bög` and `bog`.
+  - id: sv.hate.homophobic
+    term: bögjävel
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - bogjavel
+      - jävla bög
+      - javla bog
+      - bögsvin
+      - bogsvin
+    context_required: false
+  # Pejorative `bögig` is ubiquitous in Swedish voice chat. Review tier: a
+  # moderator watching one account repeat it is the useful output, not a mute.
+  - id: sv.hate.homophobic-casual
+    term: det är så bögigt
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - det ar sa bogigt
+      - så bögigt
+      - sa bogigt
+      - du är bögig
+      - du ar bogig
+      - vilken bög
+      - vilken bog
+    context_required: true
+  - id: sv.hate.antisemitic
+    term: heil hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sieg heil
+      - gasa judarna
+      - judesvin
+      - judejävel
+      - judejavel
+      - jävla jude
+      - javla jude
+    context_required: false
+  # `utvecklingsstörd` is the clinical word and `efterbliven` means "backward"
+  # before it means anything else. Review tier for the bare terms; the directed
+  # rule below carries the action.
+  - id: sv.hate.ableist
+    term: efterbliven
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - efterblivet
+      - efterblivna
+      - mongo
+      - utvecklingsstörd
+      - utvecklingsstord
+      - cp skadad
+    context_required: true
+  - id: sv.hate.ableist-directed
+    term: din jävla mongo
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - din javla mongo
+      - ditt mongo
+      - du är en mongo
+      - du ar en mongo
+      - du är efterbliven
+      - du ar efterbliven
+      - din efterblivna idiot
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: sv.hate.slur-english
+    term: niggas
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Severity 3. Swedish marks the reflexive with `dig själv`, so unlike German
+  # none of these collides with the transitive "I'll kill you"; the only
+  # carve-out needed is the respawn instruction, in `allow:` at the top.
+  - id: sv.harassment.self-harm
+    term: döda dig själv
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      # `ta livet av dig` was drafted here and removed: `jag ska ta livet av
+      # dig` is "I'll kill you", ordinary PvP speech, and it contains the phrase
+      # word for word. The explicitly reflexive `ta livet av dig själv` does not
+      # have that reading and is listed instead. `gå och dö` went the same way,
+      # because "jag ska gå och dö i lavan" is something a player says about
+      # their own character.
+      - doda dig sjalv
+      - ta livet av dig själv
+      - ta livet av dig sjalv
+      - häng dig
+      - hang dig
+      - begå självmord
+      - bega sjalvmord
+      - hoppa framför tåget
+      - hoppa framfor taget
+      - hoppa framför tunnelbanan
+      - hoppa framfor tunnelbanan
+      - skär dig själv
+      - skar dig sjalv
+      - skär upp handlederna
+      - skar upp handlederna
+    context_required: false
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: sv.harassment.self-harm-disclosure
+    term: jag vill ta livet av mig
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - jag vill dö
+      - jag vill do
+      - jag vill inte leva längre
+      - jag vill inte leva langre
+      - jag skär mig själv
+      - jag skar mig sjalv
+      - kms
+      - ingen skulle sakna mig
+    context_required: true
+  # Directed abuse, five-minute mute. Bare `jävlar` and bare `fan` are
+  # deliberately absent: in Swedish voice chat they are punctuation.
+  - id: sv.harassment.abuse
+    term: håll din käft
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - hall din kaft
+      - dra åt helvete
+      - dra at helvete
+      - fuck dig
+      - din hora
+      - din jävla hora
+      - din javla hora
+      - din jävel
+      - din javel
+      - ditt jävla svin
+      - ditt javla svin
+      - din fitta
+      - din mamma är en hora
+      - din mamma ar en hora
+    context_required: false
+  # Trash talk that is directed but mild, plus bare `håll käften`, which a
+  # Swedish player uses as emphasis rather than as an insult.
+  - id: sv.harassment.insult
+    term: du suger
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - du är dum
+      - du ar dum
+      - du är värdelös
+      - du ar vardelos
+      - du är patetisk
+      - du ar patetisk
+      - du är en förlorare
+      - du ar en forlorare
+      - ingen gillar dig
+      - alla hatar dig
+      - håll käften
+      - hall kaften
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a front door, a school, a family, a pistol.
+  - id: sv.threat.violence
+    term: jag vet var du bor
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jag vet din adress
+      - jag har din adress
+      - jag kan din adress
+      - jag vet vilken skola du går i
+      - jag vet vilken skola du gar i
+      - jag kommer hem till dig
+      - jag står utanför din dörr
+      - jag star utanfor din dorr
+      - jag dödar din familj
+      - jag dodar din familj
+      - jag tar med mig en pistol
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows.
+  - id: sv.threat.violence-ambiguous
+    term: jag knivhugger dig
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jag skjuter dig
+      - jag slår ner dig
+      - jag slar ner dig
+      - jag spöar dig
+      - jag spoar dig
+      - jag hittar dig och dödar dig
+      - jag hittar dig och dodar dig
+    context_required: true
+  - id: sv.threat.mass-violence
+    term: jag gör en skolskjutning
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jag gor en skolskjutning
+      - jag tar med ett vapen till skolan
+      - jag spränger skolan
+      - jag spranger skolan
+      - jag skjuter i skolan
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: sv.threat.mass-violence-ambiguous
+    term: skolskjutning
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: sv.threat.sexual-violence
+    term: jag våldtar dig
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jag valdtar dig
+      - jag ska våldta dig
+      - jag ska valdta dig
+      - jag våldtar din mamma
+      - jag valdtar din mamma
+    context_required: false
+  # Armed police at a child's front door. No gameplay reading, so severity 3 and
+  # kept separate from doxxing.
+  - id: sv.threat.swatting
+    term: jag skickar polisen hem till dig
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jag skickar insatsstyrkan hem till dig
+      - jag ringer polisen till din adress
+      - jag swattar dig
+    context_required: false
+  - id: sv.threat.doxxing
+    term: jag doxxar dig
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - jag doxar dig
+      - jag läcker din adress
+      - jag lacker din adress
+      - jag lägger ut din adress
+      - jag lagger ut din adress
+      - jag postar din adress
+    context_required: false
+  # In Minecraft an IP is the server address every player types to connect.
+  - id: sv.threat.doxxing-ip
+    term: jag har din ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - jag vet din ip
+      - jag läcker din ip
+      - jag lacker din ip
+      - jag ddosar dig
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: sv.sexual.explicit
+    term: sug min kuk
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - sug min snopp
+      - jag vill knulla dig
+      - visa dina tuttar
+      - visa dina bröst
+      - visa dina brost
+      - visa din fitta
+      - skicka nudes
+      - skicka nakenbilder
+      - skicka en nakenbild
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these catch the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: sv.sexual.grooming
+    term: säg det inte till dina föräldrar
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - sag det inte till dina foraldrar
+      - berätta inte för dina föräldrar
+      - beratta inte for dina foraldrar
+      - säg det inte till din mamma
+      - sag det inte till din mamma
+      - säg det inte till någon
+      - sag det inte till nagon
+      - det är vår lilla hemlighet
+      - det ar var lilla hemlighet
+      - det stannar mellan oss
+      - ta av dig kläderna
+      - ta av dig kladerna
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `är du naken` means "are you wearing armour" on any
+  # survival server.
+  - id: sv.sexual.grooming-signal
+    term: är du ensam hemma
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ar du ensam hemma
+      - är dina föräldrar hemma
+      - ar dina foraldrar hemma
+      - är din mamma hemma
+      - ar din mamma hemma
+      - är du naken
+      - ar du naken
+      - hur gammal är du egentligen
+      - hur gammal ar du egentligen
+      - du är så mogen för din ålder
+      - du ar sa mogen for din alder
+      - skicka en bild på dig
+      - skicka en bild pa dig
+      - skicka bilder
+      - lägg till mig på snap
+      - lagg till mig pa snap
+      - sätt på kameran
+      - satt pa kameran
+    context_required: true

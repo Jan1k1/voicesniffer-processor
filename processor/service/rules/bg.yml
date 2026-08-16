@@ -1,0 +1,447 @@
+version: 1
+language: bg
+# See en.yml for the pack-wide policy. Four things are specific to Bulgarian.
+#
+# **Cyrillic contains characters that look exactly like Latin ones.** а е о р с у
+# х and their capitals are different codepoints from the Latin letters they are
+# drawn as, and a pattern written with one Latin letter inside a Cyrillic word
+# never fires while looking perfectly correct in the file. Nothing reports it.
+# Every letter in this pack was checked by codepoint rather than by eye, and the
+# only non-Cyrillic token in the whole file is `ip`, which is deliberate.
+#
+# **`й` decomposes, so the de-accent test asks for an `и` twin.** NFKD splits
+# й (U+0439) into и plus a combining breve, so
+# `test_consonant_marked_terms_ship_a_de_accented_twin` treats `убий се` as a
+# marked term and wants `убии се` listed beside it. Those twins are here. They
+# are close to inert in practice, because й is an ordinary letter of the
+# alphabet rather than a diacritic and the transcriber writes it, but they cost
+# nothing and the test is right in the general case. `ъ`, `ь`, `ю`, `я` and `щ`
+# are single codepoints and need no twin. `ѝ` does decompose and is not used.
+#
+# **Fuzzy in Bulgarian only absorbs held-down letters.** `_is_vowel` asks whether
+# the NFKD base letter is one of `aeiouy`, which no Cyrillic letter is, so a
+# differing run may change its length but never its letter. The accept set of
+# `педераст` is therefore exactly the elongations of it, which is what a shouted
+# slur produces, and neither the 78,238 entry sweep of bg_BG.dic nor the 146,269
+# entry sweep of ru_RU.dic returns anything for it.
+#
+# **Several of these words are ordinary Bulgarian.** `педал` is what a bicycle
+# has two of, `мангал` is a brazier, `циганин` is the ethnonym a newspaper
+# prints, `негър` was neutral within living memory, and `дебил` is everyday.
+# Each of those is review tier here, and the action sits on the qualified and
+# directed forms instead, the way cs.yml splits `negr` from `ty negre`. Two more
+# are kept out of the pack altogether: `копеле` is how friends address each
+# other, and `обратен` means "reverse" far more often than it means "gay".
+# `гол` is a football goal as well as "naked", so it only appears inside
+# `гол ли си`, which is review tier as well.
+#
+# Native review still outstanding on the register calls, and on whether the
+# doxxing phrasings read as threats to a Bulgarian speaker.
+allow:
+  # `убий се` is also how a player says "die and reset your spawn point". The
+  # phrase is the most valuable harassment term in the pack, so the game reading
+  # is carved out rather than the rule weakened. It alone still flags.
+  - убий се за да респавнеш
+  - убии се за да респавнеш
+  - убий се и респавни
+  - убии се и респавни
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: bg.spam.server-ad
+    term: влез в моя сървър
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ела на моя сървър
+      - влез в сървъра ми
+      - моето ip е
+    context_required: false
+  - id: bg.spam.community-ad
+    term: влез в моя дискорд
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ела в моя дискорд
+    context_required: true
+  - id: bg.spam.free-items
+    term: безплатни диаманти
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - безплатен ранг
+    context_required: true
+  - id: bg.spam.self-promo
+    term: абонирай се за канала ми
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - абонираи се за канала ми
+      - гледай канала ми
+      - гледаи канала ми
+      - виж канала ми
+      - последвай ме в туич
+      - последваи ме в туич
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The only fuzzy rule in this pack, and it is safe for a reason specific to the
+  # script rather than to the words: a Cyrillic letter is never a vowel to
+  # `_is_vowel`, so a differing run may only change length. The accept set is the
+  # elongations.
+  #
+  # `педераст` stays at mute tier with a known cost attached. The sweep reports
+  # it as an ordinary word in ru_RU.dic and uk_UA.dic, and `pederast` is one in
+  # sk_SK.dic and american-english, because several languages borrowed the same
+  # Greek compound. It is kept acting anyway: the descriptive reading is clinical
+  # or legal and neither turns up in Minecraft voice chat, and this is the main
+  # homophobic slur in Bulgarian. If a customer ever reports a mute on it, this
+  # is the line to move to review tier.
+  - id: bg.hate.homophobic
+    term: педераст
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - педерасти
+      - педераста
+      - педерастче
+    context_required: false
+  # `педал` is the ordinary word for a pedal and `гей` is the neutral term.
+  # Review tier for the bare forms; the directed rule below carries the action.
+  - id: bg.hate.homophobic-ambiguous
+    term: педал
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - педали
+      - педала
+      - гей
+      - геи
+    context_required: true
+  - id: bg.hate.homophobic-directed
+    term: ти си педал
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - шибан педал
+      - мръсен педал
+      - шибан гей
+      - шибан геи
+    context_required: false
+  # `циганин` is the ordinary Bulgarian ethnonym and `мангал` is the everyday
+  # word for a brazier, so both are review tier.
+  - id: bg.hate.roma
+    term: циганин
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - цигани
+      - циганка
+      - мангал
+      - мангали
+    context_required: true
+  - id: bg.hate.roma-directed
+    term: мръсен циганин
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - шибан циганин
+      - мръсни цигани
+      - тъп мангал
+    context_required: false
+  # `негър` was the neutral Bulgarian word within living memory. Review tier.
+  - id: bg.hate.racial
+    term: негър
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - негри
+      - негъра
+    context_required: true
+  - id: bg.hate.racial-directed
+    term: мръсен негър
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - шибан негър
+      - черна маймуна
+      - черна маимуна
+      - черньо
+    context_required: false
+  # `евреин` on its own is the neutral word and is never listed; it only appears
+  # here with something in front of it.
+  - id: bg.hate.antisemitic
+    term: хайл хитлер
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - хаил хитлер
+      - мръсен евреин
+      - шибан евреин
+    context_required: false
+  # `дебил` is an everyday insult in Bulgarian and `олигофрен` is a clinical
+  # term. Review tier for the bare forms.
+  - id: bg.hate.ableist
+    term: дебил
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - дебили
+      - олигофрен
+      - олигофрени
+      - малоумник
+    context_required: true
+  - id: bg.hate.ableist-directed
+    term: ти си дебил
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - тъп дебил
+      - шибан дебил
+      - ти си олигофрен
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: bg.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `убий се` stays at severity 3; the respawn reading is carved out by the allow
+  # entries at the top of this file. Bare `умри` is deliberately absent: it is
+  # what a player shouts at a creeper.
+  - id: bg.harassment.self-harm
+    term: убий се
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - убии се
+      - иди се убий
+      - иди се убии
+      - обеси се
+      - скочи от прозореца
+      - отрежи си вените
+      - изпий белина
+      - изпии белина
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: bg.harassment.self-harm-disclosure
+    term: искам да се убия
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - искам да умра
+      - не искам да живея повече
+      - режа се
+      - kms
+      - няма да липсвам на никого
+    context_required: true
+  # Directed abuse, five-minute mute. Bare swearing is deliberately absent for
+  # the same reason as in en.yml: in Bulgarian voice chat it is punctuation, and
+  # `копеле` is how friends address each other.
+  - id: bg.harassment.abuse
+    term: майната ти
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - маината ти
+      - еби се
+      - да ти еба майката
+      - да ти еба маиката
+      - ти си путка
+      - ти си лайно
+      - ти си лаино
+      - млъкни бе
+    context_required: false
+  - id: bg.harassment.insult
+    term: ти си боклук
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - ти си скапан
+      - никой не те харесва
+      - никои не те харесва
+      - никой не те иска
+      - никои не те иска
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family, a pistol.
+  - id: bg.threat.violence
+    term: знам къде живееш
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - знам адреса ти
+      - намерих адреса ти
+      - ще дойда у вас
+      - ще доида у вас
+      - ще убия семейството ти
+      - ще убия семеиството ти
+      - знам в кое училище си
+      - ще донеса пистолет
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `ще те убия` on its own
+  # is not listed anywhere in this pack, for the same reason en.yml does not list
+  # "I'll kill you".
+  - id: bg.threat.violence-ambiguous
+    term: ще те намушкам
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ще те застрелям
+      - ще те намеря и ще те убия
+      - ще ти счупя главата
+    context_required: true
+  # Every variant names the school. `ще взривя` without an object is what a
+  # player says about TNT.
+  - id: bg.threat.mass-violence
+    term: ще стрелям в училището
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ще взривя училището
+      - ще донеса пистолет в училището
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: bg.threat.mass-violence-ambiguous
+    term: стрелба в училището
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: bg.threat.sexual-violence
+    term: ще те изнасиля
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ще изнасиля майка ти
+      - ще изнасиля маика ти
+    context_required: false
+  - id: bg.threat.doxxing
+    term: ще пусна адреса ти
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ще кача адреса ти
+      - ще те доксна
+      - ще те ддосна
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: bg.threat.doxxing-ip
+    term: имам твоето ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - знам твоето ip
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: bg.sexual.explicit
+    term: духай ми
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - духаи ми
+      - искам да те чукам
+      - покажи ми циците си
+      - прати голи снимки
+      - прати нюдс
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: bg.sexual.grooming
+    term: не казвай на родителите си
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - не казваи на родителите си
+      - не казвай на майка си
+      - не казваи на маика си
+      - не казвай на никого
+      - не казваи на никого
+      - това е нашата тайна
+      - това е нашата таина
+      - нека остане между нас
+      - съблечи се
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `гол ли си` means "have you got no armour on", and
+  # `гол` is also a football goal.
+  - id: bg.sexual.grooming-signal
+    term: сам ли си вкъщи
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - сама ли си вкъщи
+      - вкъщи ли са родителите ти
+      - на колко години си
+      - прати ми снимка
+      - прати ми снимки
+      - пусни камерата
+      - гол ли си
+      - гола ли си
+    context_required: true

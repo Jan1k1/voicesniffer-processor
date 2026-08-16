@@ -1,0 +1,546 @@
+version: 1
+language: lt
+# See en.yml for the pack-wide policy. Four things are specific to Lithuanian.
+#
+# **Nothing in this pack is fuzzy, and that is a measurement rather than a
+# preference.** Lithuanian is Latin script, so `_is_vowel` folds `ą ę ė į ų ū` to
+# real vowels and `_fuzzy_token_matches` will happily swap one for another. At
+# seven characters the budget is two runs, and the first pattern anyone would
+# reach for goes straight into ordinary vocabulary:
+# `_fuzzy_token_matches('pidaras', ..., 'padaras', ...)` returns True, and
+# **padaras** is the everyday Lithuanian word for a creature or a thing. Same
+# frame, one vowel, an hour-long mute on somebody describing a mob. Lithuanian
+# also declines and derives more than Czech does, so every fuzzy pattern here
+# would sit closer to a real word than the Czech ones that had to be pulled. The
+# whole pack is `exact`.
+#
+# The cost is stated rather than hidden: this pack has no obfuscation tolerance
+# at all. A held-down letter defeats every rule in it. That is the trade en.yml
+# describes, taken all the way, because there is no Lithuanian frame here that
+# earns the other side of it.
+#
+# **Consonant marks are not folded, so every marked term is listed twice.**
+# `_is_vowel` asks about the base letter, so `ą`/`a` and `ė`/`e` cost one vowel
+# change and are absorbed; `č`, `š` and `ž` stay distinct from `c`, `s` and `z`.
+# The transcriber drops all of them, so each pattern carrying any mark ships a
+# fully unmarked twin: `nusižudyk` pairs with `nusizudyk`, `žinau kur tu gyveni`
+# with `zinau kur tu gyveni`. Enforced by
+# `test_consonant_marked_terms_ship_a_de_accented_twin`.
+#
+# **Two words that look like slurs are not, and are absent on purpose.**
+# `žydas` is the ordinary, entirely neutral Lithuanian word for a Jew, so it
+# appears nowhere in this pack except inside the phrase `žydus į dujas`, which is
+# not ambiguous. `gėjus` is likewise the neutral word for a gay man. Listing
+# either as a term would mute a player for using correct Lithuanian.
+#
+# **Latin script means this pack shares an alphabet with en.yml and lv.yml.**
+# Every single-token pattern below was checked against ordinary English and
+# against the Latvian pack. `negro` and `negrą` are the Lithuanian genitive and
+# accusative of `negras` and are deliberately dropped: `negro` and `negra` are
+# ordinary words in Spanish and Italian and the accusative de-accents onto the
+# latter, and a server can have several packs enabled at once. The nominative and
+# plural carry the rule instead.
+#
+# Native review outstanding on the register calls: whether `negras`, `čigonas`
+# and `juodukas` are placed correctly at review tier rather than mute tier, and
+# whether the abuse phrasings are the ones a Lithuanian player would actually
+# use rather than the ones a dictionary suggests.
+allow:
+  # `nusižudyk` is also how a player says "die and respawn at your bed". The term
+  # is the most valuable harassment entry in the pack, so the game reading is
+  # carved out rather than the rule weakened. `nusižudyk` alone still flags.
+  - nusižudyk kad respawnintum
+  - nusizudyk kad respawnintum
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: lt.spam.server-ad
+    term: ateik į mano serverį
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ateik i mano serveri
+      - prisijunk prie mano serverio
+      - užeik į mano serverį
+      - uzeik i mano serveri
+      - mano serverio ip
+      - štai mano serverio ip
+      - stai mano serverio ip
+    context_required: false
+  # Review tier for the same reason as en.spam.community-ad: a server that runs
+  # its own Discord hears this as ordinary talk.
+  - id: lt.spam.community-ad
+    term: prisijunk prie mano discordo
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ateik į mano discordą
+      - ateik i mano discorda
+    context_required: true
+  - id: lt.spam.free-items
+    term: nemokami deimantai
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - deimantai nemokamai
+      - dalinu deimantus
+    context_required: true
+  # Servers run real giveaways and real donation stores, so this is review tier.
+  - id: lt.spam.giveaway-scam
+    term: nemokami rangai
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - nemokamas donatas
+      - spausk ant nuorodos
+      - paspausk nuorodą
+      - paspausk nuoroda
+    context_required: true
+  - id: lt.spam.self-promo
+    term: užsiprenumeruok mano kanalą
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - uzsiprenumeruok mano kanala
+      - prenumeruok mano kanalą
+      - prenumeruok mano kanala
+      - žiūrėk mano youtube
+      - ziurek mano youtube
+      - spausk mygtuką prenumeruoti
+      - spausk mygtuka prenumeruoti
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `exact`, and the header says why: as a fuzzy pattern `pidaras` accepts
+  # **padaras**, the ordinary word for a creature or a thing.
+  - id: lt.hate.homophobic
+    term: pidaras
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pidarai
+      - pidaro
+      - pidarams
+      - pydaras
+      - pydarai
+      - pyderas
+      - pyderai
+      - pyderastas
+      - pyderastai
+      - pyderasto
+    context_required: false
+  # Pejorative "gėjus" is ubiquitous and ambiguous in this register, and the word
+  # itself is the neutral Lithuanian noun. Review tier: a moderator watching a
+  # pattern build up is the useful output, not a mute.
+  - id: lt.hate.homophobic-casual
+    term: tu gėjus
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - tu gejus
+      - koks tu gėjus
+      - koks tu gejus
+      - tas gėjus
+      - tas gejus
+    context_required: true
+  # `čiurka` and `chačikas` are Russian-borrowed slurs for people from the
+  # Caucasus and Central Asia. Neither is a Lithuanian word, which is why they
+  # can sit at mute tier while `negras` below cannot.
+  - id: lt.hate.slur-racial
+    term: juodasnukis
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - juodasnukiai
+      - juodasnukio
+      - čiurka
+      - ciurka
+      - čiurkos
+      - ciurkos
+      - chačikas
+      - chacikas
+    context_required: false
+  # `negras` was the ordinary Lithuanian noun for decades and is still what a
+  # great many speakers reach for without meaning anything by it; `čigonas` is
+  # likewise the everyday word many Lithuanians still use for Roma; `juodukas` is
+  # a diminutive that its users usually think is affectionate. All three are
+  # widely understood as offensive and all three are said without malice on these
+  # servers every day. Review tier: staff see every one, nobody is muted by one.
+  - id: lt.hate.slur-ambiguous
+    term: negras
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negrai
+      - negrus
+      - negrams
+      - čigonas
+      - cigonas
+      - čigonai
+      - cigonai
+      - čigono
+      - cigono
+      - čigonė
+      - cigone
+      - juodukas
+      - juodukai
+    context_required: true
+  # The directed forms carry the automatic action, the same split as
+  # cs.hate.slur-directed: "tu negras" is not a sentence anybody says by accident.
+  - id: lt.hate.slur-directed
+    term: tu negras
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tu čigonas
+      - tu cigonas
+      - tu juodasnukis
+      - tu čiurka
+      - tu ciurka
+    context_required: false
+  # `žydas` on its own is the neutral Lithuanian word for a Jew and is absent
+  # from this pack. This rule lists phrases, which are not ambiguous.
+  - id: lt.hate.antisemitic
+    term: žydus į dujas
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zydus i dujas
+      - purvinas žydas
+      - purvinas zydas
+      - heil hitleris
+      - zig heil
+    context_required: false
+  # `debilas` and `daunas` are the two generic insults of Lithuanian schoolyard
+  # speech and most of the time neither is aimed at a disabled person. Bare
+  # mention is review tier, the directed rule below carries the action. Same
+  # split, and the same reasoning, as en.hate.ableist.
+  - id: lt.hate.ableist
+    term: debilas
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - debilai
+      - debilo
+      - debilams
+      - daunas
+      - daunai
+      - dauno
+      - idiotas
+      - idiotai
+      - protiškai atsilikęs
+      - protiskai atsilikes
+    context_required: true
+  - id: lt.hate.ableist-directed
+    term: tu debilas
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - tu daunas
+      - tu idiotas
+      - tu protiškai atsilikęs
+      - tu protiskai atsilikes
+      - kvailas debilas
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: lt.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Stays at severity 3. The respawn reading is carved out by the allow entries
+  # at the top of this file rather than by weakening the rule.
+  - id: lt.harassment.self-harm
+    term: nusižudyk
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - nusizudyk
+      - eik nusižudyk
+      - eik nusizudyk
+      - pasikark
+      - eik pasikark
+      - nusišauk
+      - nusisauk
+      - persipjauk venas
+      - išgerk baliklio
+      - isgerk baliklio
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: lt.harassment.death-wish-ambiguous
+    term: geriau mirk
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - kad tu nudvėstum
+      - kad tu nudvestum
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: lt.harassment.self-harm-disclosure
+    term: noriu nusižudyti
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - noriu nusizudyti
+      - noriu mirti
+      - nebenoriu gyventi
+      - pjaustausi
+      - kms
+      - niekas manęs nepasigestų
+      - niekas manes nepasigestu
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, for the same reason as in en.yml and cs.yml. `eik
+  # nachui` is here because it is aimed at a person, not because it is coarse.
+  - id: lt.harassment.abuse
+    term: eik nachui
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - eik tu nachui
+      - eik šikti
+      - eik sikti
+      - užsičiaupk nachui
+      - uzsiciaupk nachui
+      - tu esi šūdas
+      - tu esi sudas
+      - tu niekšas
+      - tu nieksas
+      - tu šlykštynė
+      - tu slykstyne
+    context_required: false
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing a
+  # repeat offender, not worth a mute the first time.
+  - id: lt.harassment.insult
+    term: tu lūzeris
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - tu luzeris
+      - tu nulis
+      - tu niekam tikęs
+      - tu niekam tikes
+      - tavęs niekas nemyli
+      - taves niekas nemyli
+      - tavęs niekam nereikia
+      - taves niekam nereikia
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family. Bare `nužudysiu tave` is
+  # deliberately absent -- it is what a player says before a PvP round.
+  - id: lt.threat.violence
+    term: žinau kur tu gyveni
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - zinau kur tu gyveni
+      - žinau tavo adresą
+      - zinau tavo adresa
+      - radau tavo adresą
+      - radau tavo adresa
+      - žinau tavo mokyklą
+      - zinau tavo mokykla
+      - ateisiu pas tave į namus
+      - ateisiu pas tave i namus
+      - atvažiuosiu pas tave į namus
+      - atvaziuosiu pas tave i namus
+      - nužudysiu tavo šeimą
+      - nuzudysiu tavo seima
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows: "nušausiu tave" is said
+  # with a crossbow in hand and "surasiu tave ir nužudysiu" is said about the
+  # Nether. Review tier keeps the signal for staff without muting a player for
+  # describing combat.
+  - id: lt.threat.violence-ambiguous
+    term: perpjausiu tau gerklę
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - perpjausiu tau gerkle
+      - nušausiu tave
+      - nusausiu tave
+      - sumušiu tave
+      - sumusiu tave
+      - surasiu tave ir nužudysiu
+      - surasiu tave ir nuzudysiu
+    context_required: true
+  - id: lt.threat.mass-violence
+    term: sušaudysiu mokyklą
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - susaudysiu mokykla
+      - susprogdinsiu mokyklą
+      - susprogdinsiu mokykla
+      - ateisiu į mokyklą su ginklu
+      - ateisiu i mokykla su ginklu
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: lt.threat.mass-violence-ambiguous
+    term: šaudymas mokykloje
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - saudymas mokykloje
+    context_required: true
+  - id: lt.threat.sexual-violence
+    term: išprievartausiu tave
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - isprievartausiu tave
+      - išžaginsiu tave
+      - iszaginsiu tave
+      - išprievartausiu tavo mamą
+      - isprievartausiu tavo mama
+    context_required: false
+  - id: lt.threat.doxxing
+    term: paskelbsiu tavo adresą
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - paskelbsiu tavo adresa
+      - išmesiu tavo adresą
+      - ismesiu tavo adresa
+      - atsiųsiu visiems tavo adresą
+      - atsiusiu visiems tavo adresa
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: lt.threat.doxxing-ip
+    term: žinau tavo ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - zinau tavo ip
+      - turiu tavo ip
+      - ddosinsiu tave
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: lt.sexual.explicit
+    term: čiulpk mano bybį
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - ciulpk mano bybi
+      - čiulpk man
+      - ciulpk man
+      - noriu tave pakrušti
+      - noriu tave pakrusti
+      - parodyk krūtis
+      - parodyk krutis
+      - atsiųsk nuogų nuotraukų
+      - atsiusk nuogu nuotrauku
+      - atsiųsk nuogą nuotrauką
+      - atsiusk nuoga nuotrauka
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these name the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: lt.sexual.grooming
+    term: nesakyk tėvams
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nesakyk tevams
+      - nesakyk mamai
+      - niekam apie tai nesakyk
+      - tai bus mūsų paslaptis
+      - tai bus musu paslaptis
+      - tai mūsų paslaptis
+      - tai musu paslaptis
+      - nusirenk
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrasings a
+  # Minecraft player uses about armour: `ar tu nuogas` means "are you wearing
+  # armour" on any survival server, and `kiek tau metų` is a question children ask
+  # each other constantly. Review tier.
+  - id: lt.sexual.grooming-signal
+    term: ar tu vienas namuose
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ar tu viena namuose
+      - ar tėvai namie
+      - ar tevai namie
+      - ar mama namie
+      - ar tu nuogas
+      - ar tu nuoga
+      - kiek tau metų
+      - kiek tau metu
+      - atsiųsk savo nuotrauką
+      - atsiusk savo nuotrauka
+      - pridėk mane snapchate
+      - pridek mane snapchate
+      - įjunk kamerą
+      - ijunk kamera
+    context_required: true

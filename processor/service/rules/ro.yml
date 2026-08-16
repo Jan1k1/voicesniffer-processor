@@ -1,0 +1,618 @@
+version: 1
+language: ro
+# See en.yml for the pack-wide policy. Four things are specific to Romanian.
+#
+# **Nothing here is fuzzy.** Romanian alternates vowels inside the stem as part
+# of ordinary inflection (`fată`/`fete`, `cioară`/`ciori`, `bou`/`boi`), which is
+# exactly the drift the run-structure matcher is built to absorb. A fuzzy rule
+# here would accept the paradigm of some other word. Every rule is `exact`.
+#
+# **Romanian is written with two different sets of marks and the transcriber
+# drops both.** `ș`/`ț` with a comma below (U+0219, U+021B) and `ş`/`ţ` with a
+# cedilla (U+015F, U+0163) are both in circulation, `ă`, `â` and `î` are dropped
+# entirely, and NFKD strips all of them. Every marked pattern therefore ships a
+# fully unmarked twin: `știu unde locuiești` pairs with `stiu unde locuiesti`,
+# `pizdă` with `pizda`, `țâțele` with `tatele`. Enforced by
+# ``test_consonant_marked_terms_ship_a_de_accented_twin``. The unmarked twin is
+# the one that will actually fire in production.
+#
+# **`curvă` de-accents to `curva`, which is a bend in the road in Spanish,
+# Italian and Portuguese.** It is never listed bare here for that reason, only
+# inside `ești o curvă` and `fiu de curvă`. The same reasoning keeps `cur` out:
+# three characters, and an English word for a mongrel dog.
+#
+# **`țigan` is not settled vocabulary.** It is the word a large share of
+# speakers use for Roma with no malice at all, and it is also the slur. `cioară`
+# is a crow and `bozgor` is heard as banter in Transylvania. All three are review
+# tier and only the directed forms (`țigan împuțit`, `cioroi împuțit`) mute.
+#
+# Native review still outstanding: whether `bou` and `măgar` belong in the review
+# tier or nowhere at all, and whether the crude items in the abuse rule read as
+# ordinary Romanian swearing rather than as targeted abuse.
+allow:
+  # `omoară te` is also how a player says "die and respawn". The phrase is the
+  # most valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `omoară te` alone still flags.
+  - omoară te ca să respawnezi
+  - omoara te ca sa respawnezi
+  - omoară te și respawnezi
+  - omoara te si respawnezi
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: ro.spam.server-ad
+    term: intră pe serverul meu
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - intra pe serverul meu
+      - vino pe serverul meu
+      - hai pe serverul meu
+      - ip ul meu este
+      - ăsta e ip ul meu
+      - asta e ip ul meu
+    context_required: false
+  # Review tier: "intră pe discordul meu pentru raid" is ordinary talk on a
+  # server that runs its own Discord.
+  - id: ro.spam.community-ad
+    term: intră pe discordul meu
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - intra pe discordul meu
+      - vino pe discordul meu
+    context_required: true
+  - id: ro.spam.free-items
+    term: diamante gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: ro.spam.giveaway-scam
+    term: grade gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - robux gratis
+      - dă click pe link
+      - da click pe link
+      - click pe linkul meu
+      - intră pe linkul meu
+      - intra pe linkul meu
+    context_required: true
+  - id: ro.spam.self-promo
+    term: abonează te la canalul meu
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - aboneaza te la canalul meu
+      - dă subscribe la canalul meu
+      - da subscribe la canalul meu
+      - vezi canalul meu
+      - urmărește mă pe twitch
+      - urmareste ma pe twitch
+      - dă un like și abonează te
+      - da un like si aboneaza te
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  - id: ro.hate.homophobic
+    term: poponar
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - poponari
+      - poponarule
+      - fătălău
+      - fatalau
+      - fătălăi
+      - fatalai
+      - poponar împuțit
+      - poponar imputit
+    context_required: false
+  # `pederast` and `invertit` are both used as slurs and both are still ordinary
+  # words: the first is clinical and legal vocabulary, the second is simply
+  # "inverted" and turns up in any sentence about a reversed sign or a flipped
+  # block. Review tier; `poponar` above carries the action.
+  - id: ro.hate.homophobic-ambiguous
+    term: pederast
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pederaști
+      - pederasti
+      - invertit
+      - invertiți
+      - invertiti
+    context_required: true
+  - id: ro.hate.slur-racial
+    term: țigan împuțit
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tigan imputit
+      - țigancă împuțită
+      - tiganca imputita
+      - cioroi împuțit
+      - cioroi imputit
+      - du te la cortul tău
+      - du te la cortul tau
+    context_required: false
+  # `țigan` is the word a large share of speakers use for Roma with no malice,
+  # `cioară` and `ciori` are crows, and `bozgor` is heard as banter in
+  # Transylvania as often as it is heard as abuse. Review tier; the directed
+  # forms above carry the action.
+  #
+  # `jidani` is here rather than in the antisemitic rule below for a different
+  # reason: the Czech word `jídání` de-accents to `jidani`, and the transcriber
+  # that drops Czech marks writes exactly that. It is a marginal word, but it is
+  # in `cs_CZ.dic` and a mute is an hour. The singular `jidan` and the vocative
+  # `jidanule` have no such twin and stay at mute tier.
+  - id: ro.hate.slur-ambiguous
+    term: țigan
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tigan
+      - țigani
+      - tigani
+      - țigancă
+      - tiganca
+      - cioară
+      - cioara
+      - ciori
+      - cioroi
+      - bozgor
+      - bozgori
+      - jidani
+    context_required: true
+  - id: ro.hate.antisemitic
+    term: jidan
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - jidanule
+      - moarte evreilor
+      - afară cu evreii
+      - afara cu evreii
+      - la cuptor cu evreii
+      - heil hitler
+      - sieg heil
+    context_required: false
+  - id: ro.hate.xenophobic
+    term: du te în țara ta
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - du te in tara ta
+      - întoarce te în țara ta
+      - intoarce te in tara ta
+      - afară cu străinii
+      - afara cu strainii
+    context_required: false
+  # `retardat`, `handicapat` and `debil` are all still clinical vocabulary in
+  # Romanian and `mongoloid` names a nationality, so the bare tokens fire on
+  # ordinary speech. Review tier; the directed rule below carries the action.
+  - id: ro.hate.ableist
+    term: retardat
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retardați
+      - retardati
+      - retardată
+      - retardata
+      - handicapat
+      - handicapați
+      - handicapati
+      - mongoloid
+      - mongoloizi
+      - debil
+      - debili
+    context_required: true
+  - id: ro.hate.ableist-directed
+    term: ești retardat
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - esti retardat
+      - ești un retardat
+      - esti un retardat
+      - retardatule
+      - handicapatule
+      - ești un handicapat
+      - esti un handicapat
+      - retardat mintal
+      - bou retardat
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: ro.hate.homophobic-casual
+    term: ești gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - esti gay
+      - ce gay ești
+      - ce gay esti
+      - ce gay
+      - prea gay
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: ro.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `omoară te` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file rather than by weakening the rule.
+  - id: ro.harassment.self-harm
+    term: omoară te
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - omoara te
+      - sinucide te
+      - du te și te sinucide
+      - du te si te sinucide
+      - spânzură te
+      - spanzura te
+      - taie ți venele
+      - taie ti venele
+      - bea clor
+      - aruncă te de pe pod
+      - arunca te de pe pod
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: ro.harassment.death-wish-ambiguous
+    term: sper să mori
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - sper sa mori
+      - sper să crapi
+      - sper sa crapi
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: ro.harassment.self-harm-disclosure
+    term: vreau să mă sinucid
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - vreau sa ma sinucid
+      - vreau să mor
+      - vreau sa mor
+      - nu mai vreau să trăiesc
+      - nu mai vreau sa traiesc
+      - mă tai
+      - ma tai
+      - kms
+      - nimănui nu i ar păsa
+      - nimanui nu i ar pasa
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because in Romanian voice chat it is punctuation.
+  # `curvă` never appears alone here; de-accented it is the Spanish, Italian and
+  # Portuguese word for a bend in the road.
+  - id: ro.harassment.abuse
+    term: du te dracului
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - du te în pula mea
+      - du te in pula mea
+      - taci în pula mea
+      - taci in pula mea
+      - futu ți mama
+      - futu ti mama
+      - ești un căcat
+      - esti un cacat
+      - bucată de rahat
+      - bucata de rahat
+      - ești o curvă
+      - esti o curva
+      - fiu de curvă
+      - fiu de curva
+      - mă cac pe tine
+      - ma cac pe tine
+    context_required: false
+  # `bou` is an ox and `măgar` a donkey, and both are what friends call each
+  # other; `tâmpit` is closer to "daft" than to abuse. These report to staff
+  # instead of muting.
+  #
+  # The vocative `boule` is deliberately absent even from the review tier: it is
+  # the ordinary French word for a ball and the ordinary Czech word for a lump,
+  # both of them common, and a review rule that alerts on those is noise rather
+  # than signal.
+  - id: ro.harassment.abuse-ambiguous
+    term: bou
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - măgar
+      - magar
+      - măgarule
+      - magarule
+      - dobitoc
+      - dobitocule
+      - tâmpit
+      - tampit
+      - idiotule
+    context_required: true
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: ro.harassment.insult
+    term: ești prost
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - esti prost
+      - ești un ratat
+      - esti un ratat
+      - ești jalnic
+      - esti jalnic
+      - ești un nimeni
+      - esti un nimeni
+      - nu te place nimeni
+      - toți te urăsc
+      - toti te urasc
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: ro.threat.violence
+    term: știu unde locuiești
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - stiu unde locuiesti
+      - știu unde stai
+      - stiu unde stai
+      - știu adresa ta
+      - stiu adresa ta
+      - am adresa ta
+      - ți am găsit adresa
+      - ti am gasit adresa
+      - vin la tine acasă
+      - vin la tine acasa
+      - știu la ce școală mergi
+      - stiu la ce scoala mergi
+      - îți omor familia
+      - iti omor familia
+      - aduc un pistol
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: ro.threat.violence-ambiguous
+    term: te omor
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - o să te omor
+      - o sa te omor
+      - te înjunghii
+      - te injunghii
+      - te împușc
+      - te impusc
+      - îți sparg fața
+      - iti sparg fata
+      - te găsesc și te omor
+      - te gasesc si te omor
+    context_required: true
+  # Every variant names the school. An objectless "te împușc" fires on a player
+  # describing a bow, which is the mistake en.yml made with "shoot up".
+  - id: ro.threat.mass-violence
+    term: împușc pe toți la școală
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - impusc pe toti la scoala
+      - omor pe toți la școală
+      - omor pe toti la scoala
+      - pun o bombă la școală
+      - pun o bomba la scoala
+      - arunc școala în aer
+      - arunc scoala in aer
+      - duc o armă la școală
+      - duc o arma la scoala
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: ro.threat.mass-violence-ambiguous
+    term: împușcături la școală
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - impuscaturi la scoala
+    context_required: true
+  - id: ro.threat.sexual-violence
+    term: te violez
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - o să te violez
+      - o sa te violez
+      - îți violez mama
+      - iti violez mama
+    context_required: false
+  # Police at a child's front door. There is no gameplay reading of this.
+  - id: ro.threat.swatting
+    term: chem poliția la tine acasă
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - chem politia la tine acasa
+      - trimit poliția la tine acasă
+      - trimit politia la tine acasa
+      - trimit mascații la tine acasă
+      - trimit mascatii la tine acasa
+    context_required: false
+  - id: ro.threat.doxxing
+    term: îți public adresa
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - iti public adresa
+      - îți dau adresa pe net
+      - iti dau adresa pe net
+      - dau adresa ta la toată lumea
+      - dau adresa ta la toata lumea
+      - te doxez
+      - o să te doxez
+      - o sa te doxez
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "am IP-ul tău de la server" is a helpful sentence. Review tier.
+  - id: ro.threat.doxxing-ip
+    term: am ip ul tău
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - am ip ul tau
+      - știu ip ul tău
+      - stiu ip ul tau
+      - te ddosez
+      - o să te ddosez
+      - o sa te ddosez
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: ro.sexual.explicit
+    term: suge mi pula
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - linge mi curul
+      - vreau să te fut
+      - vreau sa te fut
+      - arată mi țâțele
+      - arata mi tatele
+      - arată mi sânii
+      - arata mi sanii
+      - arată mi curul
+      - arata mi curul
+      - trimite nudes
+      - trimite mi nudes
+      - trimite mi o poză nud
+      - trimite mi o poza nud
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: ro.sexual.grooming
+    term: nu le spune părinților
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nu le spune parintilor
+      - nu spune părinților tăi
+      - nu spune parintilor tai
+      - nu spune nimănui
+      - nu spune nimanui
+      - rămâne între noi
+      - ramane intre noi
+      - e secretul nostru
+      - e micul nostru secret
+      - dezbracă te
+      - dezbraca te
+      - dă ți hainele jos
+      - da ti hainele jos
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: "ești gol" means "you have no armour on", and
+  # `gol` is also a goal and an empty container.
+  - id: ro.sexual.grooming-signal
+    term: ești singur acasă
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - esti singur acasa
+      - ești singură acasă
+      - esti singura acasa
+      - sunt părinții acasă
+      - sunt parintii acasa
+      - e mama ta acasă
+      - e mama ta acasa
+      - ești gol
+      - esti gol
+      - ești goală
+      - esti goala
+      - câți ani ai de fapt
+      - cati ani ai de fapt
+      - trimite mi o poză
+      - trimite mi o poza
+      - trimite mi poze
+      - adaugă mă pe snap
+      - adauga ma pe snap
+      - pornește camera
+      - porneste camera
+      - hai pe video
+    context_required: true

@@ -1,0 +1,593 @@
+version: 1
+language: uk
+# See en.yml for the pack-wide policy and ru.yml for the Cyrillic mechanics,
+# which are the same here. Five things are specific to Ukrainian.
+#
+# **Real Cyrillic, checked by codepoint.** `а е о р с у х` have Latin twins that
+# are identical in every font, and a pattern carrying one Latin letter loads
+# clean, sweeps clean and never fires. Every character in every pattern below is
+# in U+0400..U+04FF or is a space, with one deliberate exception: the Latin `ip`
+# in uk.threat.doxxing-ip, which is Latin because that is what the transcriber
+# writes when a player says the two letters.
+#
+# **This is Ukrainian, not Russian in a hat.** Ukrainian writes `і`, `ї`, `є` and
+# `ґ` and does not write `ы`, `э`, `ъ` or `ё`; Russian is the other way round.
+# The vocabulary follows: `підор` not `пидор`, `дебіл` not `дебил`, `вбий себе`
+# not `убей себя`, `де ти живеш` not `где ты живёшь`. A pack that mixed the two
+# would look plausible to a reader and fire on nothing a Ukrainian speaker says.
+#
+# **`й` and `ї` carry combining marks, so the twin test asks for spellings that
+# are not Ukrainian.** `test_consonant_marked_terms_ship_a_de_accented_twin` runs
+# NFKD over each pattern and drops the combining characters: `й` becomes `и` and
+# `ї` becomes `і`. Nobody writes `міи сервер` or `євреів`, and no transcriber
+# emits them. The twins are listed anyway because the test folds a breve and a
+# diaeresis exactly as it folds a caron and cannot be told the difference from
+# inside a pack file. `ґ` has no decomposition, so it needs no twin, and both
+# `зґвалтую` and the commoner `згвалтую` are listed on their own merits.
+#
+# **Apostrophes normalise to spaces.** `normalize_transcript` maps every
+# non-alphanumeric character to a space, so `вб'ю` reaches the matcher as `вб ю`.
+# The patterns below are written in that form, which looks wrong and is what the
+# matcher actually compares against.
+#
+# **Minecraft vocabulary.** `ти голий` means "you have no armour on", `айпі` is
+# the server address every player types to connect, and `вбий себе` is how a
+# player says "die and respawn". The last is carved out by the allow entries
+# below rather than by weakening the rule.
+#
+# Native review still outstanding, and this pack needs it more than the others.
+# `кацап`, `москаль` and `рашист` are wartime ethnic slurs whose register on a
+# Ukrainian server is genuinely contested: they are at review tier and are
+# deliberately absent from the directed rule, which is a judgement a native
+# speaker should confirm or overturn. `жид` has the same problem from the other
+# direction, being the ordinary word in Polish and in older western Ukrainian
+# usage. Also unreviewed: whether the doxxing phrasings read as threats.
+allow:
+  # `вбий себе` is also how a player says "reset your spawn point". The phrase is
+  # the most valuable harassment term in the pack, so the game reading is carved
+  # out rather than the rule weakened. `вбий себе` alone still flags.
+  - вбий себе щоб респавнутися
+  - вбий себе і респавнься
+  - вбийся щоб респавнутися
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: uk.spam.server-ad
+    term: заходь на мій сервер
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - заходь на міи сервер
+      - заходьте на мій сервер
+      - заходьте на міи сервер
+      - приходь на мій сервер
+      - приходь на міи сервер
+      - айпі мого сервера
+      - аипі мого сервера
+      - ось айпі сервера
+      - ось аипі сервера
+    context_required: false
+  # Review tier for the same reason as en.spam.community-ad: a server that runs
+  # its own Discord hears this as ordinary talk.
+  - id: uk.spam.community-ad
+    term: заходь у мій дискорд
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - заходь у міи дискорд
+      - заходьте у мій дискорд
+      - заходьте у міи дискорд
+      - приєднуйся до мого дискорду
+      - приєднуися до мого дискорду
+    context_required: true
+  - id: uk.spam.free-items
+    term: безкоштовні алмази
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - алмази безкоштовно
+      - роздаю алмази
+    context_required: true
+  # Servers run real giveaways and real donation stores, so this is review tier.
+  - id: uk.spam.giveaway-scam
+    term: безкоштовний донат
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - безкоштовнии донат
+      - безкоштовні ранги
+      - переходь за посиланням
+      - тисни на посилання
+      - клікни на посилання
+    context_required: true
+  - id: uk.spam.self-promo
+    term: підпишись на мій канал
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - підпишись на міи канал
+      - підпишіться на мій канал
+      - підпишіться на міи канал
+      - підпишись на мій ютуб
+      - підпишись на міи ютуб
+      - підпишись на мене
+      - зазирни на мій канал
+      - зазирни на міи канал
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The one fuzzy rule in this pack. Seven single-letter runs, and on Cyrillic
+  # the accept set is only these letters with up to two of them held down, which
+  # is the obfuscation the rule exists for and nothing besides. The 331k-stem
+  # sweep finds nothing in it.
+  - id: uk.hate.homophobic
+    term: підарас
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - підорас
+      - підараси
+      - підораси
+      - підараса
+      - підораса
+      - підарасів
+      - підорасів
+    context_required: false
+  # The declensions equal run counts cannot reach, plus the shorter stems, which
+  # are too short to carry obfuscation tolerance safely.
+  - id: uk.hate.homophobic-listed
+    term: підор
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - підори
+      - підора
+      - підору
+      - підором
+      - підорів
+      - підорам
+      - педик
+      - педики
+      - педика
+      - педиків
+      - гомосек
+      - гомосеки
+    context_required: false
+  # Pejorative "гей" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: uk.hate.homophobic-casual
+    term: ти гей
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - ти геи
+      - ти що гей
+      - ти що геи
+      - ти шо гей
+      - ти шо геи
+      - він гей
+      - він геи
+    context_required: true
+  - id: uk.hate.slur-racial
+    term: чорножопий
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - чорножопии
+      - чорножопі
+      - чорножопих
+      - чорножопим
+      - вузькоокий
+      - вузькоокии
+      - вузькоокі
+      - ніггер
+      - ніггери
+      - ніггера
+      - ніггерів
+      - хач
+      - хачі
+      - хача
+      - хачик
+    context_required: false
+  # Every term here has a reading a player can reach without malice. `негр` was
+  # the neutral register word for most of a century and a great many speakers
+  # still use it without meaning anything by it. `жид` is the ordinary,
+  # non-pejorative word for a Jew in Polish and in older western Ukrainian usage.
+  # `кацап`, `москаль` and `рашист` are aimed at Russians and their register on a
+  # Ukrainian server in 2026 is contested rather than settled: widely understood
+  # as slurs, also said constantly and jocularly by exactly the age group on
+  # these servers. Review tier for all of them, and none of them appears in the
+  # directed rule below. This is the call in this pack most in need of a native
+  # speaker.
+  - id: uk.hate.slur-ambiguous
+    term: негр
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - негра
+      - негру
+      - негром
+      - негри
+      - негрів
+      - неграм
+      - жид
+      - жиди
+      - жида
+      - жидом
+      - жидів
+      - кацап
+      - кацапи
+      - кацапа
+      - кацапів
+      - москаль
+      - москалі
+      - москаля
+      - москалів
+      - рашист
+      - рашисти
+    context_required: true
+  # The directed forms carry the automatic action, the same split as
+  # cs.hate.slur-directed. Deliberately no `ти кацап` or `ти москаль`: see the
+  # comment above.
+  - id: uk.hate.slur-directed
+    term: ти негр
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ти жид
+      - ти хач
+      - ти чорножопий
+      - ти чорножопии
+      - ти вузькоокий
+      - ти вузькоокии
+    context_required: false
+  - id: uk.hate.antisemitic
+    term: жидів у піч
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - євреїв у піч
+      - євреів у піч
+      - хайль гітлер
+      - хаиль гітлер
+      - зіг хайль
+      - зіг хаиль
+      - брудний жид
+      - бруднии жид
+    context_required: false
+  # `даун` and `дебіл` are the two generic insults of Ukrainian schoolyard speech
+  # and most of the time neither is aimed at a disabled person. Bare mention is
+  # review tier, the directed rule below carries the action.
+  - id: uk.hate.ableist
+    term: даун
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - дауни
+      - дауна
+      - даунів
+      - дебіл
+      - дебіли
+      - дебіла
+      - дебілів
+      - олігофрен
+      - розумово відсталий
+      - розумово відсталии
+    context_required: true
+  - id: uk.hate.ableist-directed
+    term: ти даун
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - ти дебіл
+      - ти олігофрен
+      - тупий дебіл
+      - тупии дебіл
+      - ти розумово відсталий
+      - ти розумово відсталии
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: uk.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Stays at severity 3. The respawn reading is carved out by the allow entries
+  # at the top of this file rather than by weakening the rule.
+  - id: uk.harassment.self-harm
+    term: вбий себе
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - вбии себе
+      - вбийся
+      - вбиися
+      - іди вбийся
+      - іди вбиися
+      - повісся
+      - іди повісся
+      - переріж собі вени
+      - стрибни під потяг
+      - стрибни з мосту
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: uk.harassment.death-wish-ambiguous
+    term: здохни
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - іди здохни
+      - здохни вже
+      - щоб ти здох
+      - краще помри
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: uk.harassment.self-harm-disclosure
+    term: хочу вбити себе
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - хочу померти
+      - не хочу більше жити
+      - я ріжу себе
+      - kms
+      - ніхто не буде за мною сумувати
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare mat is absent
+  # on purpose, for the same reason as in ru.yml and cs.yml.
+  - id: uk.harassment.abuse
+    term: іди нахуй
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - іди нахуи
+      - пішов нахуй
+      - пішов нахуи
+      - іди на хуй
+      - іди на хуи
+      - пішов ти нахуй
+      - пішов ти нахуи
+      - ти мудак
+      - ти чмо
+      - ти виродок
+      - ти довбойоб
+      - ти довбоиоб
+      - ти уйобок
+      - ти уиобок
+      - стули пельку
+      - заткнись нахуй
+      - заткнись нахуи
+      - ти шматок лайна
+      - ти шматок лаина
+    context_required: false
+  # Trash talk that is directed but mild. `ти нуб` is half of every voice channel
+  # on a survival server. Review tier.
+  - id: uk.harassment.insult
+    term: ти лох
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - ти нуб
+      - ти нікчема
+      - ти днище
+      - тебе ніхто не любить
+      - ти нікому не потрібен
+      - тебе всі ненавидять
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family. Bare `я тебе вб ю` is
+  # deliberately absent -- it is what a player says before a PvP round.
+  - id: uk.threat.violence
+    term: я знаю де ти живеш
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - я знаю твою адресу
+      - я знайшов твою адресу
+      - я знаишов твою адресу
+      - я знаю твою школу
+      - я прийду до тебе додому
+      - я прииду до тебе додому
+      - я приїду до тебе додому
+      - я приіду до тебе додому
+      - я вб ю твою родину
+      - я вб ю твоїх батьків
+      - я вб ю твоіх батьків
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: uk.threat.violence-ambiguous
+    term: я тебе заріжу
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - я тебе застрелю
+      - я тебе відлупцюю
+      - я знайду тебе і вб ю
+      - я знаиду тебе і вб ю
+      - я тобі морду наб ю
+    context_required: true
+  - id: uk.threat.mass-violence
+    term: розстріляю школу
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - влаштую стрілянину в школі
+      - прийду в школу зі зброєю
+      - прииду в школу зі зброєю
+      - підірву школу
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: uk.threat.mass-violence-ambiguous
+    term: стрілянина в школі
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  # Both spellings of the stem: `ґ` is the etymological one and a great deal of
+  # Ukrainian writing, including most transcriber output, uses plain `г`.
+  - id: uk.threat.sexual-violence
+    term: я тебе зґвалтую
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - я тебе згвалтую
+      - зґвалтую тебе
+      - згвалтую тебе
+      - зґвалтую твою матір
+      - згвалтую твою матір
+      - зґвалтую твою сестру
+      - згвалтую твою сестру
+    context_required: false
+  - id: uk.threat.doxxing
+    term: зіллю твою адресу
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - викладу твою адресу
+      - скину твою адресу
+      - я тебе задокшу
+      - задокшу тебе
+    context_required: false
+  # In Minecraft an "айпі" is the server address every player types to connect,
+  # so an IP claim is review tier for the same reason as in en.yml. The Latin
+  # `ip` variants are deliberate: the transcriber writes the two letters in Latin
+  # about as often as it spells them out in Cyrillic.
+  - id: uk.threat.doxxing-ip
+    term: я знаю твій айпі
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - я знаю твіи аипі
+      - я знаю твій ip
+      - я знаю твіи ip
+      - у мене є твій айпі
+      - у мене є твіи аипі
+      - задудосю тебе
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: uk.sexual.explicit
+    term: відсмокчи мені
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - смокчи хуй
+      - смокчи хуи
+      - хочу тебе трахнути
+      - покажи цицьки
+      - покажи груди
+      - скинь ню
+      - надішли ню
+      - скинь голе фото
+      - надішли голе фото
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these name the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: uk.sexual.grooming
+    term: не кажи батькам
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - не кажи мамі
+      - не кажи татові
+      - нікому про це не кажи
+      - це буде наш секрет
+      - це наш секрет
+      - це наша таємниця
+      - роздягнись
+      - роздягнись для мене
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrasings a
+  # Minecraft player uses about armour: `ти голий` means "you are not wearing
+  # armour" on any survival server, and `скільки тобі років` is a question
+  # children ask each other constantly. Review tier.
+  - id: uk.sexual.grooming-signal
+    term: ти вдома сам
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ти вдома сама
+      - батьки вдома
+      - мама вдома
+      - ти зараз сам
+      - ти голий
+      - ти голии
+      - ти гола
+      - скільки тобі років
+      - скинь своє фото
+      - надішли своє фото
+      - додай мене в снапчат
+      - додаи мене в снапчат
+      - увімкни камеру
+    context_required: true

@@ -1,0 +1,45 @@
+[project]
+name = "voicesniffer-processor"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.139.0",
+    "hypercorn==0.18.0",
+    "numpy==2.5.1",
+    "opuslib-next==1.3.0",
+    "pydantic==2.13.4",
+    "PyYAML==6.0.3",
+    "regex==2026.7.10",
+    "voicesniffer-runtime",
+]
+
+[tool.uv.sources]
+voicesniffer-runtime = { path = "../runtime", editable = true }
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+    "ruff==0.15.22",
+]
+
+[build-system]
+requires = ["hatchling==1.31.0"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["native: requires an installed libopus native library"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/voicesniffer_processor"]

@@ -1,0 +1,630 @@
+version: 1
+language: es
+# See en.yml for the pack-wide policy. Four things are specific to Spanish.
+#
+# **Nothing here is fuzzy.** Spanish marks gender and number on the last vowel,
+# so one changed vowel is routinely a different real word: `caro`/`cara`/`coro`,
+# `puta`/`puto`/`pata`, `mano`/`mano`. The run-structure matcher tolerates
+# exactly a vowel swap, which is the one edit Spanish morphology hands out for
+# free. Every rule is `exact`; the pack buys precision by giving up obfuscation
+# tolerance.
+#
+# **Accents are dropped by the transcriber**, so every accented pattern ships an
+# unaccented twin, and `ñ` decomposes too: `apuñalar` pairs with `apunalar`,
+# `enséñame` with `ensename`. Enforced by
+# ``test_consonant_marked_terms_ship_a_de_accented_twin``.
+#
+# **Spanish is the pack most exposed to the other four.** Portuguese and Italian
+# share whole tokens with it, and the sharing is asymmetric: a word that is
+# neutral here is a slur there and the other way round.
+#
+#   `puto` is the Mexican f-slur and the ordinary Portuguese word for a kid.
+#   `negro` and `negra` are simply the colour black in Spanish, so they are not
+#     listed at all here; the fr and it packs carry them at review tier only.
+#   `curva` is a bend in the road in Spanish, Italian and Portuguese, and the
+#     de-accented Romanian word for a whore. The ro pack never lists it bare.
+#
+# `puto`, `marica` and `cabrón` are therefore in the review tier, and the
+# directed phrasings built on them carry the automatic action.
+#
+# **Regional register is not a detail here.** `pendejo`, `boludo`, `huevón` and
+# `marica` are everyday address in Mexico, Argentina, Chile and Colombia
+# respectively, and are real abuse in Spain. A pack cannot tell which server it
+# is on, so all four are review tier.
+#
+# Native review still outstanding: whether `gilipollas` belongs at severity 2,
+# and whether the Latin American variants below read as natural or translated.
+allow:
+  # `mátate` is also how a player says "die and respawn". The phrase is the most
+  # valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `mátate` alone still flags.
+  - mátate para reaparecer
+  - matate para reaparecer
+  - mátate y reaparece
+  - matate y reaparece
+  - mátate para respawnear
+  - matate para respawnear
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: es.spam.server-ad
+    term: únete a mi servidor
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - unete a mi servidor
+      - entra a mi servidor
+      - entren a mi servidor
+      - vengan a mi servidor
+      - mi ip es
+      - esta es mi ip
+    context_required: false
+  # Review tier: "únete a mi discord para el raid" is ordinary talk on a server
+  # that runs its own Discord.
+  - id: es.spam.community-ad
+    term: únete a mi discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - unete a mi discord
+      - entra a mi discord
+    context_required: true
+  - id: es.spam.free-items
+    term: diamantes gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: es.spam.giveaway-scam
+    term: rangos gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - robux gratis
+      - pavos gratis
+      - tarjetas regalo gratis
+      - haz clic en el enlace
+      - haz clic en mi enlace
+      - entra a mi link
+    context_required: true
+  - id: es.spam.self-promo
+    term: suscríbete a mi canal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - suscribete a mi canal
+      - suscríbanse a mi canal
+      - suscribanse a mi canal
+      - mira mi canal
+      - mira mi youtube
+      - sígueme en twitch
+      - sigueme en twitch
+      - dale like y suscríbete
+      - dale like y suscribete
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  - id: es.hate.homophobic
+    term: maricón
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - maricon
+      - maricones
+      - mariconazo
+      - mariconazos
+      - joto
+      - jotos
+      - maricón de mierda
+      - maricon de mierda
+      - puto maricón
+      - puto maricon
+    context_required: false
+  # `puto` is the ordinary Portuguese word for a kid and an intensifier in
+  # Spanish itself ("el puto juego"). `marica` is an everyday filler in Colombian
+  # speech, a diminutive of María, and a given name in Czech and Italian. Review
+  # tier for both; the directed forms above carry the action.
+  - id: es.hate.homophobic-ambiguous
+    term: puto
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - putos
+      - marica
+      - maricas
+      - mariposón
+      - mariposon
+      - bollera
+      - bolleras
+    context_required: true
+  - id: es.hate.slur-racial
+    term: negrata
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negratas
+      - sudaca
+      - sudacas
+      - negro de mierda
+      - negra de mierda
+      - puto negro
+      - sudaca de mierda
+      - moro de mierda
+    context_required: false
+  # `gitano` is the word many speakers use with no malice and `panchito` is a
+  # diminutive of Francisco and a brand of peanuts.
+  #
+  # Two terms are deliberately absent from this pack entirely rather than sitting
+  # at review tier. Bare `negro` is the colour in Spanish, so an alert on every
+  # "el bloque negro" is not a signal. `moro` is a surname in Czech and English
+  # (`Moro`) and dark-haired in Italian, and it carries too little on its own to
+  # be worth that; the unambiguous `moro de mierda` is in the rule above.
+  - id: es.hate.slur-ambiguous
+    term: gitano
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - gitanos
+      - gitana
+      - gitanas
+      - panchito
+      - panchitos
+    context_required: true
+  - id: es.hate.antisemitic
+    term: judío de mierda
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - judio de mierda
+      - putos judíos
+      - putos judios
+      - muerte a los judíos
+      - muerte a los judios
+      - a las cámaras de gas
+      - a las camaras de gas
+      - heil hitler
+      - sieg heil
+    context_required: false
+  - id: es.hate.xenophobic
+    term: vete a tu país
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - vete a tu pais
+      - vuelve a tu país
+      - vuelve a tu pais
+      - fuera los inmigrantes
+    context_required: false
+  # `retrasado` is the ordinary participle for "delayed" and fires on "el vuelo
+  # está retrasado". `subnormal` and `deficiente` are statistical and
+  # administrative vocabulary, and `mongólico` names a nationality. Review tier;
+  # the directed rule below carries the action.
+  - id: es.hate.ableist
+    term: retrasado
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retrasados
+      - retrasada
+      - subnormal
+      - subnormales
+      - mongólico
+      - mongolico
+      - mongolo
+      - mongolos
+      - deficiente
+    context_required: true
+  - id: es.hate.ableist-directed
+    term: eres un retrasado
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - eres retrasado
+      - puto retrasado
+      - retrasado mental
+      - pedazo de retrasado
+      - eres subnormal
+      - eres un subnormal
+      - puto subnormal
+      - eres un mongólico
+      - eres un mongolico
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: es.hate.homophobic-casual
+    term: eso es gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - qué gay
+      - que gay
+      - qué gay eres
+      - que gay eres
+      - eres gay
+      - eres muy gay
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: es.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `mátate` stays at severity 3; the respawn reading is carved out by the allow
+  # entries at the top of this file rather than by weakening the rule.
+  - id: es.harassment.self-harm
+    term: mátate
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - matate
+      - mátate ya
+      - matate ya
+      - suicídate
+      - suicidate
+      - ahórcate
+      - ahorcate
+      - tírate de un puente
+      - tirate de un puente
+      - córtate las venas
+      - cortate las venas
+      - bebe lejía
+      - bebe lejia
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: es.harassment.death-wish-ambiguous
+    term: ojalá te mueras
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - ojala te mueras
+      - ojalá te murieras
+      - ojala te murieras
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: es.harassment.self-harm-disclosure
+    term: quiero matarme
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - me quiero matar
+      - quiero morirme
+      - quiero morir
+      - ya no quiero vivir
+      - me corto los brazos
+      - kms
+      - nadie me echaría de menos
+      - nadie me echaria de menos
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because in Spanish voice chat it is punctuation.
+  - id: es.harassment.abuse
+    term: vete a la mierda
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - vete a la verga
+      - vete a la chingada
+      - hijo de puta
+      - hija de puta
+      - hijo de perra
+      - hijoputa
+      - hijaputa
+      - me cago en tu madre
+      - me cago en tu puta madre
+      - cállate la puta boca
+      - callate la puta boca
+      - cierra la puta boca
+      - chinga tu madre
+      - gilipollas
+      - eres un gilipollas
+      - pedazo de mierda
+      - trozo de mierda
+    context_required: false
+  # `cabrón` is a male goat and, across most of Mexico, a greeting. `pendejo`,
+  # `boludo`, `huevón` and `culero` are everyday address in Mexico, Argentina,
+  # Chile and Mexico again. A pack cannot tell which server it is on, so these
+  # report to staff instead of muting.
+  - id: es.harassment.abuse-ambiguous
+    term: cabrón
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - cabron
+      - cabrones
+      - pendejo
+      - pendejos
+      - boludo
+      - boludos
+      - huevón
+      - huevon
+      - culero
+      - culeros
+    context_required: true
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: es.harassment.insult
+    term: eres un inútil
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - eres un inutil
+      - eres una basura
+      - eres basura
+      - eres tonto
+      - eres tonta
+      - eres estúpido
+      - eres estupido
+      - eres un fracasado
+      - nadie te quiere
+      - todos te odian
+      - no le importas a nadie
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: es.threat.violence
+    term: sé dónde vives
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - se donde vives
+      - sé dónde vivís
+      - se donde vivis
+      - sé tu dirección
+      - se tu direccion
+      - conozco tu dirección
+      - conozco tu direccion
+      - tengo tu dirección
+      - tengo tu direccion
+      - encontré tu dirección
+      - encontre tu direccion
+      - voy a ir a tu casa
+      - sé a qué escuela vas
+      - se a que escuela vas
+      - sé a qué colegio vas
+      - se a que colegio vas
+      - voy a matar a tu familia
+      - voy a llevar una pistola
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: es.threat.violence-ambiguous
+    term: te voy a matar
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - voy a matarte
+      - te voy a apuñalar
+      - te voy a apunalar
+      - te voy a disparar
+      - te voy a partir la cara
+      - te voy a reventar
+      - te voy a encontrar y matar
+      - te encuentro y te mato
+    context_required: true
+  # Every variant names the school. An objectless "voy a disparar" fires on a
+  # player describing a bow, which is the mistake en.yml made with "shoot up".
+  - id: es.threat.mass-violence
+    term: voy a disparar en la escuela
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - voy a disparar en mi colegio
+      - voy a matar a todos en la escuela
+      - voy a poner una bomba en la escuela
+      - voy a volar la escuela
+      - voy a llevar una pistola a la escuela
+      - llevar un arma al colegio
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: es.threat.mass-violence-ambiguous
+    term: tiroteo en la escuela
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - tiroteo en el colegio
+    context_required: true
+  - id: es.threat.sexual-violence
+    term: te voy a violar
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - voy a violarte
+      - te violo
+      - voy a violar a tu madre
+      - voy a violar a tu hermana
+    context_required: false
+  # Police at a child's front door. There is no gameplay reading of this.
+  - id: es.threat.swatting
+    term: voy a llamar a la policía a tu casa
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - voy a llamar a la policia a tu casa
+      - voy a mandar a la policía a tu casa
+      - voy a mandar a la policia a tu casa
+      - voy a enviar a la poli a tu casa
+      - te voy a swatear
+    context_required: false
+  - id: es.threat.doxxing
+    term: voy a filtrar tu dirección
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - voy a filtrar tu direccion
+      - voy a publicar tu dirección
+      - voy a publicar tu direccion
+      - voy a subir tu dirección
+      - voy a subir tu direccion
+      - voy a pasar tu dirección
+      - voy a pasar tu direccion
+      - te voy a doxear
+      - voy a doxearte
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "tengo tu IP para el server" is a helpful sentence. Review tier.
+  - id: es.threat.doxxing-ip
+    term: tengo tu ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - sé tu ip
+      - se tu ip
+      - conozco tu ip
+      - voy a filtrar tu ip
+      - te voy a ddosear
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: es.sexual.explicit
+    term: chúpame la polla
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - chupame la polla
+      - chúpamela
+      - chupamela
+      - chúpame el pito
+      - chupame el pito
+      - cómeme el culo
+      - comeme el culo
+      - quiero follarte
+      - te quiero follar
+      - quiero cogerte
+      - enséñame las tetas
+      - ensename las tetas
+      - muéstrame las tetas
+      - muestrame las tetas
+      - muéstrame el culo
+      - muestrame el culo
+      - mándame nudes
+      - mandame nudes
+      - manda nudes
+      - envíame nudes
+      - enviame nudes
+      - mándame una foto desnuda
+      - mandame una foto desnuda
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: es.sexual.grooming
+    term: no le digas a tus padres
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - no se lo digas a tus padres
+      - no le digas a tu mamá
+      - no le digas a tu mama
+      - no le digas a tu madre
+      - no le digas a nadie
+      - no se lo digas a nadie
+      - que quede entre nosotros
+      - es nuestro secreto
+      - es nuestro secretito
+      - quítate la ropa
+      - quitate la ropa
+      - sácate la ropa
+      - sacate la ropa
+      - desnúdate
+      - desnudate
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: "estás desnudo" means "you have no armour on".
+  - id: es.sexual.grooming-signal
+    term: estás solo en casa
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - estas solo en casa
+      - estás sola en casa
+      - estas sola en casa
+      - están tus padres en casa
+      - estan tus padres en casa
+      - está tu mamá en casa
+      - esta tu mama en casa
+      - estás desnudo
+      - estas desnudo
+      - estás desnuda
+      - estas desnuda
+      - cuántos años tienes en realidad
+      - cuantos anos tienes en realidad
+      - mándame una foto
+      - mandame una foto
+      - mándame fotos
+      - mandame fotos
+      - agrégame en snap
+      - agregame en snap
+      - enciende la cámara
+      - enciende la camara
+      - hacemos videollamada
+    context_required: true

@@ -1,0 +1,203 @@
+name: release-image
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to publish, without a leading v (for example 1.0.0)"
+        required: true
+        type: string
+      latest:
+        description: "Also move the :latest tag to this build"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/jan1k1/voicesniffer-processor
+  SMOKE_MODEL_ID: moonshine-tiny-v2-en
+
+jobs:
+  publish:
+    name: build, prove it starts, push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: work out the tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=${{ inputs.tag || 'unused' }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && inputs.latest }}
+          labels: |
+            org.opencontainers.image.title=VoiceSniffer processor
+            org.opencontainers.image.description=Speech moderation processor for the VoiceSniffer Minecraft plugin
+            org.opencontainers.image.vendor=Sniffer Studio
+
+      - name: refuse to push an untagged image
+        run: |
+          set -eu
+          tags='${{ steps.meta.outputs.tags }}'
+          test -n "$tags" || { echo "no tags resolved"; exit 1; }
+          echo "$tags"
+
+      - name: build the candidate
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: processor/service/Dockerfile
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: voicesniffer-processor:candidate
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: the image carries at least 23 rule packs
+        run: |
+          set -eu
+          packs=$(docker run --rm --entrypoint sh voicesniffer-processor:candidate \
+            -c 'ls /app/rules/*.yml | wc -l')
+          echo "rule packs: $packs"
+          test "$packs" -ge 23 || { echo "found $packs"; exit 1; }
+
+      - name: every required setting is defaulted except the token
+        run: |
+          set -eu
+          docker run --rm --entrypoint sh voicesniffer-processor:candidate -c '
+            set -eu
+            for var in VOICESNIFFER_MODEL_ID VOICESNIFFER_MODELS_DIR VOICESNIFFER_RULES_DIR; do
+              eval "value=\${$var:-}"
+              test -n "$value" || { echo "MISSING DEFAULT: $var"; exit 1; }
+              echo "$var=$value"
+            done
+            test -z "${VOICESNIFFER_TOKENS_FILE:-}" || {
+              echo "the token file must not have a default"; exit 1; }
+          '
+
+      - name: the default model id resolves in the registry
+        run: |
+          set -eu
+          docker run --rm --entrypoint /app/.venv/bin/python voicesniffer-processor:candidate -c '
+          import os
+          from voicesniffer_runtime.model_store import default_registry_path, load_registry
+          model_id = os.environ["VOICESNIFFER_MODEL_ID"]
+          registry = load_registry(default_registry_path())
+          assert model_id in registry, f"default model {model_id!r} is not in the registry"
+          print(f"default model {model_id} resolves")
+          '
+
+      - name: it starts healthy with a token file and nothing else
+        run: |
+          set -eux
+          docker run -d --name smoke \
+            --health-start-period=600s \
+            -e VOICESNIFFER_MODEL_ID="$SMOKE_MODEL_ID" \
+            -e VOICESNIFFER_TOKENS_FILE=/run/secrets/tokens \
+            -v "$PWD/docker/m2/tokens.example.json:/run/secrets/tokens:ro" \
+            voicesniffer-processor:candidate
+          for _ in $(seq 1 90); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' smoke 2>/dev/null || echo none)
+            [ "$status" = healthy ] && break
+            [ "$(docker inspect -f '{{.State.Running}}' smoke)" = false ] && break
+            sleep 5
+          done
+          docker logs smoke
+          test "$(docker inspect -f '{{.State.Health.Status}}' smoke)" = healthy
+
+      - name: unauthenticated moderation is refused
+        run: |
+          set -eu
+          code=$(docker exec smoke /app/.venv/bin/python -c "
+          import urllib.error, urllib.request
+          request = urllib.request.Request(
+              'http://127.0.0.1:8080/v1/moderate',
+              data=b'',
+              method='POST',
+              headers={'Content-Type': 'application/vnd.voicesniffer.opus.v1'},
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=5) as response:
+                  print(response.status)
+          except urllib.error.HTTPError as error:
+              print(error.code)
+          ")
+          echo "unauthenticated POST /v1/moderate -> $code"
+          case "$code" in
+            401|403) ;;
+            *) echo "expected 401 or 403, got $code"; exit 1 ;;
+          esac
+
+      - name: tear down the smoke container
+        if: always()
+        run: docker rm -f smoke || true
+
+      - name: push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: processor/service/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: sign the digest with build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: say what shipped
+        run: |
+          {
+            echo "### Published"
+            echo
+            echo '```'
+            echo '${{ steps.meta.outputs.tags }}'
+            echo '```'
+            echo
+            echo "Digest: \`${{ steps.push.outputs.digest }}\`"
+            echo
+            echo "Pull test:"
+            echo '```'
+            echo "docker pull ${{ env.IMAGE }}:latest"
+            echo '```'
+            echo
+            echo "If that asks for a login, the package is still private."
+            echo "Package settings -> Change visibility -> Public."
+          } >> "$GITHUB_STEP_SUMMARY"

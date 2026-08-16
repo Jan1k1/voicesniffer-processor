@@ -1,0 +1,539 @@
+version: 1
+language: it
+# See en.yml for the pack-wide policy. Four things are specific to Italian.
+#
+# **Nothing here is fuzzy.** Italian carries gender and number on the final
+# vowel, so a single vowel swap is a different real word far more often than it
+# is an obfuscation: `frocio`/`froce`, `cara`/`caro`/`coro`, `nudo`/`nuda`. The
+# run-structure matcher tolerates exactly a vowel swap, which is the one edit
+# Italian morphology hands out for free. Every rule is `exact`.
+#
+# **Accents are dropped by the transcriber**, so every accented pattern ships an
+# unaccented twin: `tua madre è a casa` pairs with `tua madre e a casa`.
+# Enforced by ``test_consonant_marked_terms_ship_a_de_accented_twin``. Italian
+# only accents final vowels, so this costs less here than in French or Romanian,
+# but the twin is what actually fires.
+#
+# **Half the everyday insult vocabulary is also literal.** `finocchio` is
+# fennel, `checca` is a name and a pasta sauce, `cornuto` is "horned",
+# `ritardato` is the ordinary participle for "delayed", and `handicappato` is
+# still the neutral administrative word. Every one of those is review tier, and
+# the directed phrasings built on them carry the automatic action instead.
+#
+# **`negro` is shared with the Spanish and Portuguese packs, where it is not a
+# slur at all.** In Italian the neutral word is `nero` and `negro` is the slur;
+# in Spanish and Portuguese `negro` is simply the colour black. A server running
+# it and es together, or a Spanish utterance the detector labelled Italian,
+# reaches this pack. Bare `negro` is therefore review tier and only the directed
+# forms (`negro di merda`, `sporco negro`) mute.
+#
+# Native review still outstanding: whether `vaffanculo` belongs at severity 2 or
+# in the review tier given how it is actually used, and whether `terrone` reads
+# as abuse or as banter to a northern and a southern speaker respectively.
+allow:
+  # `ammazzati` is also how a player says "die and respawn". The phrase is the
+  # most valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `ammazzati` alone still flags.
+  - ammazzati per respawnare
+  - ammazzati e respawna
+  - ammazzati così respawni
+  - ammazzati cosi respawni
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: it.spam.server-ad
+    term: entra nel mio server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - entrate nel mio server
+      - vieni sul mio server
+      - venite sul mio server
+      - il mio ip è
+      - il mio ip e
+    context_required: false
+  # Review tier: "entra nel mio discord per il raid" is ordinary talk on a
+  # server that runs its own Discord.
+  - id: it.spam.community-ad
+    term: entra nel mio discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - vieni sul mio discord
+    context_required: true
+  - id: it.spam.free-items
+    term: diamanti gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: it.spam.giveaway-scam
+    term: gradi gratis
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - robux gratis
+      - v bucks gratis
+      - buoni regalo gratis
+      - clicca sul link
+      - clicca il mio link
+      - apri il mio link
+    context_required: true
+  - id: it.spam.self-promo
+    term: iscriviti al mio canale
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - iscrivetevi al mio canale
+      - guarda il mio canale
+      - guarda il mio youtube
+      - seguimi su twitch
+      - metti mi piace e iscriviti
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  - id: it.hate.homophobic
+    term: frocio
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - froci
+      - frocia
+      - ricchione
+      - ricchioni
+      - culattone
+      - culattoni
+      - frocio di merda
+      - sporco frocio
+      - pezzo di frocio
+    context_required: false
+  # `finocchio` is fennel and `checca` is both a woman's name and the tomato
+  # sauce, so a recipe reaches this rule. Review tier; the unambiguous slurs
+  # above carry the action.
+  - id: it.hate.homophobic-ambiguous
+    term: finocchio
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - finocchi
+      - checca
+      - checche
+      - femminuccia
+      - femminucce
+    context_required: true
+  - id: it.hate.slur-racial
+    term: negro di merda
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sporco negro
+      - negra di merda
+      - sporco zingaro
+      - zingaro di merda
+      - sporco marocchino
+    context_required: false
+  # `negro` is the colour black in Spanish and Portuguese, `zingaro` is the word
+  # many speakers still use for Roma without malice, and `terrone` is as often
+  # regional banter as it is abuse. Review tier for all three; the directed forms
+  # above carry the action.
+  - id: it.hate.slur-ambiguous
+    term: negro
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negri
+      - negra
+      - zingaro
+      - zingari
+      - zingara
+      - terrone
+      - terroni
+    context_required: true
+  - id: it.hate.antisemitic
+    term: ebreo di merda
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sporco ebreo
+      - sporchi ebrei
+      - morte agli ebrei
+      - nel forno con gli ebrei
+      - heil hitler
+      - sieg heil
+    context_required: false
+  - id: it.hate.xenophobic
+    term: tornatene al tuo paese
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - torna al tuo paese
+      - tornate al vostro paese
+      - fuori gli stranieri
+    context_required: false
+  # `ritardato` is the ordinary participle for "delayed", `handicappato` is the
+  # neutral administrative word, `mongoloide` names a nationality and `spastico`
+  # is clinical. Review tier; the directed rule below carries the action.
+  - id: it.hate.ableist
+    term: ritardato
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - ritardati
+      - ritardata
+      - mongoloide
+      - mongoloidi
+      - handicappato
+      - handicappati
+      - spastico
+      - subnormale
+    context_required: true
+  - id: it.hate.ableist-directed
+    term: sei un ritardato
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - sei ritardato
+      - pezzo di ritardato
+      - ritardato mentale
+      - cazzo di ritardato
+      - sei un mongoloide
+      - sei un handicappato
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: it.hate.homophobic-casual
+    term: sei gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - che gay
+      - quanto sei gay
+      - roba da gay
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: it.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `ammazzati` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file rather than by weakening the rule.
+  - id: it.harassment.self-harm
+    term: ammazzati
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - ucciditi
+      - suicidati
+      - impiccati
+      - buttati dal ponte
+      - buttati sotto un treno
+      - tagliati le vene
+      - bevi la candeggina
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: it.harassment.death-wish-ambiguous
+    term: spero che tu muoia
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - spero che muori
+      - vai a morire ammazzato
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: it.harassment.self-harm-disclosure
+    term: voglio uccidermi
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - voglio ammazzarmi
+      - mi voglio uccidere
+      - voglio morire
+      - non voglio più vivere
+      - non voglio piu vivere
+      - mi taglio
+      - kms
+      - nessuno sentirebbe la mia mancanza
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because in Italian voice chat it is punctuation.
+  - id: it.harassment.abuse
+    term: vaffanculo
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - vai a fare in culo
+      - vai affanculo
+      - figlio di puttana
+      - figlio di troia
+      - pezzo di merda
+      - testa di cazzo
+      - sei un coglione
+      - coglione di merda
+      - sei uno stronzo
+      - stronzo di merda
+      - chiudi quella cazzo di bocca
+      - stai zitto cazzo
+    context_required: false
+  # `cornuto` is literally "horned", `coglione` and `stronzo` are what friends
+  # call each other across most of Italy, and `bastardo` is the ordinary word for
+  # a mongrel. These report to staff instead of muting.
+  - id: it.harassment.abuse-ambiguous
+    term: coglione
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - coglioni
+      - stronzo
+      - stronzi
+      - cornuto
+      - cornuti
+      - bastardo
+      - bastardi
+      - minchione
+    context_required: true
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: it.harassment.insult
+    term: fai schifo
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - fai pena
+      - sei scarso
+      - sei un fallito
+      - sei stupido
+      - sei un idiota
+      - sei un cretino
+      - non ti vuole nessuno
+      - ti odiano tutti
+      - non conti niente
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: it.threat.violence
+    term: so dove abiti
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - so dove vivi
+      - conosco il tuo indirizzo
+      - ho il tuo indirizzo
+      - ho trovato il tuo indirizzo
+      - so a che scuola vai
+      - vengo a casa tua
+      - verrò a casa tua
+      - verro a casa tua
+      - ammazzo la tua famiglia
+      - uccido la tua famiglia
+      - porto una pistola
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: it.threat.violence-ambiguous
+    term: ti ammazzo
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ti uccido
+      - ti accoltello
+      - ti sparo
+      - ti spacco la faccia
+      - ti spacco il culo
+      - ti trovo e ti ammazzo
+      - ti vengo a prendere
+    context_required: true
+  # Every variant names the school. An objectless "sparo" fires on a player
+  # describing a bow, which is the mistake en.yml made with "shoot up".
+  - id: it.threat.mass-violence
+    term: sparo a tutti a scuola
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ammazzo tutti a scuola
+      - metto una bomba a scuola
+      - faccio saltare la scuola
+      - porto una pistola a scuola
+      - porto un fucile a scuola
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: it.threat.mass-violence-ambiguous
+    term: sparatoria a scuola
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: it.threat.sexual-violence
+    term: ti stupro
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ti violento
+      - stupro tua madre
+      - ti vengo a stuprare
+    context_required: false
+  # Police at a child's front door. There is no gameplay reading of this.
+  - id: it.threat.swatting
+    term: chiamo la polizia a casa tua
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - mando la polizia a casa tua
+      - mando i carabinieri a casa tua
+      - ti mando la polizia a casa
+    context_required: false
+  - id: it.threat.doxxing
+    term: pubblico il tuo indirizzo
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - metto online il tuo indirizzo
+      - do il tuo indirizzo a tutti
+      - faccio il leak del tuo indirizzo
+      - ti doxxo
+      - ti doxo
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "ho il tuo IP del server" is a helpful sentence. Review tier.
+  - id: it.threat.doxxing-ip
+    term: ho il tuo ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - conosco il tuo ip
+      - faccio il leak del tuo ip
+      - ti ddoso
+      - ti ddosso
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: it.sexual.explicit
+    term: succhiami il cazzo
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - ciucciami il cazzo
+      - succhiamelo
+      - leccami il culo
+      - voglio scoparti
+      - ti voglio scopare
+      - fammi vedere le tette
+      - fammi vedere il culo
+      - fammi vedere la figa
+      - mandami le nudes
+      - mandami le tue nudes
+      - mandami una foto nuda
+      - mandami foto nude
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: it.sexual.grooming
+    term: non dirlo ai tuoi genitori
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - non dirlo a tua madre
+      - non dirlo a tuo padre
+      - non dirlo a nessuno
+      - non dire niente ai tuoi
+      - deve restare tra noi
+      - è il nostro segreto
+      - e il nostro segreto
+      - il nostro piccolo segreto
+      - togliti i vestiti
+      - togliti la maglietta
+      - spogliati
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: "sei nudo" means "you have no armour on".
+  - id: it.sexual.grooming-signal
+    term: sei solo a casa
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - sei sola a casa
+      - i tuoi sono a casa
+      - tua madre è a casa
+      - tua madre e a casa
+      - sei nudo
+      - sei nuda
+      - quanti anni hai davvero
+      - mandami una foto
+      - mandami le foto
+      - mandami una tua foto
+      - aggiungimi su snap
+      - accendi la webcam
+      - accendi la telecamera
+      - facciamo una videochiamata
+    context_required: true

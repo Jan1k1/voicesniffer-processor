@@ -1,0 +1,643 @@
+version: 1
+language: cs
+# See en.yml for the pack-wide policy. Three things are specific to Czech, and
+# all three were stated wrongly in an earlier version of this header.
+#
+# **Consonant marks are not folded, vowel marks are.** ``_is_vowel`` asks about
+# the base letter, so ``í``/``i`` and ``á``/``a`` cost one vowel change and the
+# fuzzy matcher absorbs a dropped mark for free. ``š``/``s``, ``č``/``c``,
+# ``ř``/``r`` and ``ž``/``z`` stay distinct, so a consonant-marked term needs an
+# explicit de-accented twin. The earlier header claimed "every term carrying a
+# consonant mark is listed twice"; ``cigoška`` and ``cigošky`` had no twin, and
+# ``ta cigoska`` matched nothing. Fixed below.
+#
+# **Dropping the marks is not only a spelling question, it is a collision.** The
+# earlier header argued that keeping ``ž`` distinct protects ``běžný``. It
+# protects the *accented* transcript only: the same transcriber that drops marks
+# writes ``bezny``, and ``buzny`` accepted it at budget 1 -- so "to je bezny
+# postup" was a severity-3 hate flag. ``buzna``/``buzny`` are now `exact`.
+# ``cikáni`` likewise accepted ``cukání`` and ``cákání``, and ``cigan`` accepted
+# the surname ``Cogan``; those families are `exact` too. Fuzzy is now only the
+# ``buzerant`` and ``cigoš`` stems, whose frames turned up no ordinary word.
+#
+# **Inflection defeats both matchers, and this paradigm is incomplete.** Czech
+# declines everything and neither `exact` (a fixed token sequence) nor `fuzzy`
+# (equal run counts) survives a changed ending. The earlier header claimed
+# "every case that is actually said has to be listed"; the dative/locative
+# ``-ovi``, instrumental ``-em`` and plural ``-ům``/``-ech`` forms were all
+# missing. The common cases are listed now, each with its de-accented twin, but
+# this is a hand-maintained paradigm and it is a floor, not a closure. A
+# morphological analyser is the real fix and is not in this file.
+#
+# Native review still outstanding on the register calls: which terms belong at
+# review tier rather than mute tier, and whether the doxxing phrasings read as
+# threats to a Czech speaker.
+allow:
+  # `zabij se` is also how a player says "die and respawn". The phrase is the
+  # most valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `zabij se` alone still flags.
+  - zabij se a respawni
+  - zabij se ať se respawneš
+  - zabij se at se respawnes
+  - zabij se a respawn
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: cs.spam.server-ad
+    term: připoj se na můj server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - pripoj se na muj server
+      - pojď na můj server
+      - pojd na muj server
+      - přidej se na můj server
+      - pridej se na muj server
+      - moje ip je
+    context_required: false
+  - id: cs.spam.community-ad
+    term: přidej se na můj discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - pridej se na muj discord
+    context_required: true
+  - id: cs.spam.free-items
+    term: diamanty zdarma
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  - id: cs.spam.self-promo
+    term: odebírej můj kanál
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - odebirej muj kanal
+      - mrkni na můj youtube
+      - mrkni na muj youtube
+      - koukni na můj kanál
+      - koukni na muj kanal
+      - dej odběr
+      - dej odber
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # Fuzzy: the `buzerant` stem only. Eight and nine runs over a five-consonant
+  # frame, and no ordinary Czech word turned up inside the accept set.
+  - id: cs.hate.homophobic
+    term: buzerant
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - buzeranti
+      - buzeranty
+      - buzeranta
+    context_required: false
+  # The forms the fuzzy rule cannot safely carry, plus the declensions it cannot
+  # reach at all. `buzna`/`buzny` are here because at five characters the budget
+  # is one and they accepted `bezna`/`bezny` -- `běžná`/`běžný` as the
+  # transcriber writes them.
+  - id: cs.hate.homophobic-listed
+    term: buzna
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - buzny
+      - buzno
+      - buznu
+      - buznou
+      - buzně
+      - buzne
+      - buzerantovi
+      - buzerantem
+      - buzerantu
+      - buzerantů
+      - buzerantum
+      - buzerantům
+      - buzerantech
+      - teplouš
+      - teplous
+      - teplouši
+      - teplousi
+      - teplouše
+      - teplouse
+      - teploušovi
+      - teplousovi
+      - teploušem
+      - teplousem
+      - teploušů
+      - teplousu
+      - teploušům
+      - teplousum
+      - teplouších
+      - teplousich
+    context_required: false
+  # Fuzzy: the `cigoš` stem. The de-accented twins the earlier version was
+  # missing -- `cigoska`, `cigosky` -- are listed here, because the matcher does
+  # not fold `š` to `s`.
+  - id: cs.hate.roma
+    term: cigoš
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - cigoši
+      - cigoška
+      - cigošky
+      - cigos
+      - cigosi
+      - cigoska
+      - cigosky
+      # How the shipped transcriber writes the háček when it does not drop it.
+      - cigosh
+      - cigoshi
+    context_required: false
+  # Declensions of `cigoš`. They belong with the pejorative rather than with the
+  # ethnonym below, which is review tier, but they cannot live in the rule above
+  # either: that one is `fuzzy`, and adding them to it widened its accept set
+  # onto `cagášek` and `cigošová`, two ordinary Czech words the sweep caught
+  # immediately. Same lesson as the original `buzno`/`Bezno`, arrived at from the
+  # other direction. Exact, and acting.
+  - id: cs.hate.roma-forms
+    term: cigoše
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cigose
+      - cigošovi
+      - cigosovi
+      - cigošem
+      - cigosem
+      - cigošů
+      - cigosu
+      - cigošům
+      - cigosum
+      - cigoších
+      - cigosich
+      - cigošku
+      - cigosku
+      - cigošek
+      - cigosek
+    context_required: false
+  # `cikán`/`cigán` and their declensions. `exact`, because as fuzzy patterns
+  # they accepted `cukání`, `cákání`, `cukani`, `cakani` and the surname `Cogan`
+  # -- five confirmed severity-3 false positives.
+  #
+  # Review tier, which it was not until 2026-07-30. The de-accented `cigan` that
+  # the transcriber emits is a headword in the Croatian *and* Slovene
+  # dictionaries, and `cigana` is ordinary Portuguese, so with those packs also
+  # installed this rule hour-muted people for their own word for themselves. It
+  # is also what en.yml already does with `gypsy`, what sk.yml does with
+  # `cigáň`, and what pt.yml does with `cigano`: the ethnonym alerts, and the
+  # unambiguously pejorative `cigoš` family above still acts automatically.
+  - id: cs.hate.roma-listed
+    term: cikán
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cikan
+      - cikána
+      - cikana
+      - cikánovi
+      - cikanovi
+      - cikánem
+      - cikanem
+      - cikáni
+      - cikani
+      - cikánů
+      - cikanu
+      - cikánům
+      - cikanum
+      - cikány
+      - cikany
+      - cikánech
+      - cikanech
+      - cigán
+      - cigan
+      - cigána
+      - cigana
+      - cigánovi
+      - ciganovi
+      - cigánem
+      - ciganem
+      - cigáni
+      - cigani
+      - cigánů
+      - ciganu
+      - cigánům
+      - ciganum
+      - cigánech
+      - ciganech
+    context_required: true
+  # `rákosník` is also the ordinary Czech name for the reed warbler, so "viděl
+  # jsem rákosníka u rybníka" was an hour-long mute. Review tier: staff see it,
+  # the birdwatcher does not get muted.
+  - id: cs.hate.slur-ethnic
+    term: rákosník
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - rakosnik
+      - rákosníka
+      - rakosnika
+      - rákosníkovi
+      - rakosnikovi
+      - rákosníku
+      - rakosniku
+      - rákosníkem
+      - rakosnikem
+      - rákosníci
+      - rakosnici
+      - rákosníků
+      - rákosníkům
+      - rakosnikum
+      - rákosníky
+      - rakosniky
+      - rákosnících
+      - rakosnicich
+    context_required: true
+  # Contested register rather than settled: widely understood as offensive, and
+  # also widely used without malice by exactly the age group on these servers.
+  # Review tier for the bare mention; the directed rule below carries the action.
+  - id: cs.hate.slur-ambiguous
+    term: negr
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negra
+      - negrovi
+      - negrem
+      - negře
+      - negre
+      - negři
+      - negri
+      - negry
+      - negrové
+      - negrove
+      - negrů
+      - negru
+      - negrům
+      - negrum
+      - negrech
+      - čmoud
+      - cmoud
+      - čmoude
+      - cmoude
+      - arabáš
+      - arabas
+      - arabáši
+      - arabasi
+    context_required: true
+  - id: cs.hate.slur-directed
+    term: ty negre
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ty negře
+      - ty čmoude
+      - ty cmoude
+      - ty arabáši
+      - ty arabasi
+      - ty cigáne
+      - ty cigane
+      - ty cikáne
+      - ty cikane
+      - ty židáku
+      - ty zidaku
+    context_required: false
+  - id: cs.hate.antisemitic
+    term: židi do plynu
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zidi do plynu
+      - židy do plynu
+      - zidy do plynu
+      - hajl hitler
+      - židák
+      - zidak
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: cs.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `zabij se` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file.
+  - id: cs.harassment.self-harm
+    term: zabij se
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - jdi se zabít
+      - jdi se zabit
+      - běž se zabít
+      - bez se zabit
+      - oběs se
+      - obes se
+      - skoč z mostu
+      - skoc z mostu
+      - skoč pod vlak
+      - skoc pod vlak
+      - skoč pod metro
+      - skoc pod metro
+      - podřež se
+      - podrez se
+      - vem si život
+      - vem si zivot
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: cs.harassment.death-wish-ambiguous
+    term: chcípni
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - chcipni
+      - jdi chcípnout
+      - jdi chcipnout
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: cs.harassment.self-harm-disclosure
+    term: chci se zabít
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - chci se zabit
+      - chci umřít
+      - chci umrit
+      - zabiju se
+      - už nechci žít
+      - uz nechci zit
+      - řežu se
+      - rezu se
+      - kms
+      - nikomu bych nechyběl
+      - nikomu bych nechybel
+    context_required: true
+  # Directed abuse, five-minute mute. Bare profanity is deliberately absent for
+  # the same reason as in en.yml: in Czech voice chat it is punctuation.
+  - id: cs.harassment.abuse
+    term: jdi do prdele
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - seru na tebe
+      - jsi debil
+      - seš debil
+      - ses debil
+      - ty debile
+      - jsi kokot
+      - ty kokote
+      - jsi zmrd
+      - ty zmrde
+      - ty píčo
+      - ty pico
+      - jsi hovado
+      - jsi kráva
+      - jsi krava
+      - drž hubu
+      - drz hubu
+    context_required: false
+  - id: cs.harassment.insult
+    term: jsi trapnej
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - seš trapnej
+      - ses trapnej
+      - jsi blbej
+      - seš blbej
+      - ses blbej
+      - nikdo tě nemá rád
+      - nikdo te nema rad
+      - nikdo tě tu nechce
+      - nikdo te tu nechce
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something outside the game.
+  # "zabiju tě" was already absent; "zastřelím tě" (with a bow), "najdu tě a
+  # zabiju" and "podřežu tě" (with a sword) were not, and all three were
+  # confirmed false positives on ordinary PvP speech.
+  - id: cs.threat.violence
+    term: vím kde bydlíš
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vim kde bydlis
+      - znám tvoji adresu
+      - znam tvoji adresu
+      - znám tvou adresu
+      - znam tvou adresu
+      - našel jsem tvoji adresu
+      - nasel jsem tvoji adresu
+      - přijdu k tobě domů
+      - prijdu k tobe domu
+      - zabiju tvoji rodinu
+      - přinesu zítra pistoli
+      - prinesu zitra pistoli
+    context_required: false
+  - id: cs.threat.violence-ambiguous
+    term: zastřelím tě
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - zastrelim te
+      - podřežu tě
+      - podrezu te
+      - najdu tě a zabiju
+      - najdu te a zabiju
+      - rozbiju ti hubu
+    context_required: true
+  - id: cs.threat.mass-violence
+    term: vystřílím školu
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vystrilim skolu
+      - vyhodím školu do vzduchu
+      - vyhodim skolu do vzduchu
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: cs.threat.mass-violence-ambiguous
+    term: střelba ve škole
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - strelba ve skole
+    context_required: true
+  - id: cs.threat.sexual-violence
+    term: znásilním tě
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - znasilnim te
+      - znásilním tvoji mámu
+      - znasilnim tvoji mamu
+    context_required: false
+  # `dám tvoji adresu` was here and is not idiomatic for leaking one; `najdu si
+  # tě` was classified as doxxing, means "I'll come find you" and collides with
+  # ordinary gameplay -- both removed.
+  - id: cs.threat.doxxing
+    term: zveřejním tvoji adresu
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - zverejnim tvoji adresu
+      - pošlu tvoji adresu
+      - poslu tvoji adresu
+      - dám ven tvoji adresu
+      - dam ven tvoji adresu
+      - doxnu tě
+      - doxnu te
+    context_required: false
+  # In Minecraft an "IP" is the server address, so an IP claim is review tier for
+  # the same reason as in en.yml.
+  - id: cs.threat.doxxing-ip
+    term: mám tvoji ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - mam tvoji ip
+      - znám tvoji ip
+      - znam tvoji ip
+      - ddosnu tě
+      - ddosnu te
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: cs.sexual.explicit
+    term: vyliž mi
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - vyliz mi
+      - kouř mi
+      - kour mi
+      - chci tě ošukat
+      - chci te osukat
+      - chci tě vojet
+      - chci te vojet
+      - ukaž mi kozy
+      - ukaz mi kozy
+      - ukaž mi prsa
+      - ukaz mi prsa
+      - ukaž mi píču
+      - ukaz mi picu
+      - pošli nudes
+      - posli nudes
+      - pošli nahou fotku
+      - posli nahou fotku
+    context_required: false
+  - id: cs.sexual.grooming
+    term: neříkej to rodičům
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nerikej to rodicum
+      - neříkej to mámě
+      - nerikej to mame
+      - neříkej to nikomu
+      - nerikej to nikomu
+      - ať to zůstane mezi námi
+      - at to zustane mezi nami
+      - je to naše tajemství
+      - je to nase tajemstvi
+      - svlékni se
+      - svlekni se
+    context_required: false
+  # `jsi nahý` means "you have no armour on" to a Minecraft player, and it was
+  # severity 3 here. Review tier, with the rest of the ambiguous approach set.
+  - id: cs.sexual.grooming-signal
+    term: jsi doma sám
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - jsi doma sam
+      - jsi doma sama
+      - jsou rodiče doma
+      - jsou rodice doma
+      - je máma doma
+      - je mama doma
+      - jsi nahá
+      - jsi naha
+      - jsi nahý
+      - jsi nahy
+      - kolik ti je let
+      - jsi na svůj věk vyspělá
+      - jsi na svuj vek vyspela
+      - pošli mi fotku
+      - posli mi fotku
+      - pošli mi fotky
+      - posli mi fotky
+      - přidej si mě na snap
+      - pridej si me na snap
+      - zapni kameru
+    context_required: true

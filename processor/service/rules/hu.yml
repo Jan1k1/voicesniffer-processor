@@ -1,0 +1,540 @@
+version: 1
+language: hu
+# See en.yml for the pack-wide policy. Three things are specific to Hungarian.
+#
+# **Nothing here is fuzzy, on purpose.** Hungarian is agglutinative, so a stem
+# turns up inside enormous numbers of longer real words, and the fuzzy matcher
+# does not help with that anyway: it compares whole tokens, so `buzi` never
+# reaches `buzik` and `cigány` never reaches `cigánynak`. What fuzzy *would* buy
+# is tolerance for a swapped vowel, and Hungarian is the worst language in the
+# set to spend that on. `_is_vowel` folds the accent away, so a fuzzy pattern
+# treats `a` and `á`, `o` and `ó` and `ö` and `ő` as the same drift, and the
+# long/short distinction those marks carry is phonemic: `szar` and `szár`,
+# `kor` and `kór`, `tör` and `tőr` are different words that a budget of two
+# differing runs walks straight between. Every rule here is `exact`, and the
+# inflections that matter are listed.
+#
+# **The de-accented twin is not cosmetic, it is a different word.** The shipped
+# transcriber drops marks, so every marked term ships its unmarked spelling and
+# `test_consonant_marked_terms_ship_a_de_accented_twin` enforces it. That merge
+# is real and was checked term by term against hu_HU.dic before shipping: `öld`
+# de-accents onto `old`, which is an ordinary Hungarian verb *and* an ordinary
+# English word, so `öld` is never listed on its own, only inside `öld meg
+# magad`. Same reasoning keeps `szar`, `kurva`, `fasz`, `picsa` and `sitt` out
+# as bare tokens: all five are hu_HU.dic headwords, `kurva` and `sitt` are also
+# Estonian and Czech ones, and bare profanity is not a moderatable signal here
+# anyway.
+#
+# **`cigány` is the ordinary word, not the slur.** It is what a Hungarian
+# newspaper prints, so the bare forms are review tier and the action sits on the
+# qualified and directed forms, the way cs.yml splits `negr` from `ty negre`.
+# The same call is made for `néger`, `buzi`, `köcsög` (which is also a jug) and
+# `fogyatékos` (which is the clinical word for disabled).
+#
+# Native review still outstanding on the register calls, and on whether `kapd
+# be` belongs at severity 2 next to `baszd meg` or one tier down.
+allow:
+  # `öld meg magad` is also how a player says "die and reset your spawn point".
+  # The phrase is the most valuable harassment term in the pack, so the game
+  # reading is carved out rather than the rule weakened. It alone still flags.
+  - öld meg magad hogy respawnolj
+  - old meg magad hogy respawnolj
+  - öld meg magad és respawnolsz
+  - old meg magad es respawnolsz
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: hu.spam.server-ad
+    term: gyere a szerveremre
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - csatlakozz a szerveremre
+      - lépj be a szerveremre
+      - lepj be a szerveremre
+      - az ip címem
+      - az ip cimem
+    context_required: false
+  - id: hu.spam.community-ad
+    term: gyere a discordomra
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - csatlakozz a discordomra
+    context_required: true
+  - id: hu.spam.free-items
+    term: ingyen gyémánt
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ingyen gyemant
+      - ingyen gyémántok
+      - ingyen gyemantok
+    context_required: true
+  - id: hu.spam.self-promo
+    term: iratkozz fel a csatornámra
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - iratkozz fel a csatornamra
+      - nézd meg a csatornámat
+      - nezd meg a csatornamat
+      - nézd meg a youtube csatornámat
+      - nezd meg a youtube csatornamat
+      - kövess a twitchen
+      - kovess a twitchen
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  - id: hu.hate.homophobic
+    term: buzeráns
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - buzerans
+      - buzeránsok
+      - buzeransok
+      - buzeránst
+      - buzeranst
+    context_required: false
+  # `buzi` is what this age group says about a block placement it does not like,
+  # and `köcsög` is also the ordinary word for a jug. Review tier for the bare
+  # forms; the directed rule below carries the action.
+  - id: hu.hate.homophobic-ambiguous
+    term: buzi
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - buzik
+      - buzit
+      - köcsög
+      - kocsog
+      - köcsögök
+      - kocsogok
+      - homokos
+    context_required: true
+  - id: hu.hate.homophobic-directed
+    term: te buzi
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - rohadt buzi
+      - kurva buzi
+      - büdös buzi
+      - budos buzi
+      - te köcsög
+      - te kocsog
+      - rohadt köcsög
+      - rohadt kocsog
+    context_required: false
+  # `cigány` is the ordinary Hungarian word for Roma and is printed in
+  # newspapers. Review tier: staff see it, nobody is muted for the ethnonym.
+  - id: hu.hate.roma
+    term: cigány
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - cigany
+      - cigányok
+      - ciganyok
+      - cigányt
+      - ciganyt
+      # `cigó` carried the automatic action in hu.hate.roma-directed until the
+      # de-accented `cigo` turned out to be the Croatian and Slovene form of the
+      # same word, where hr.yml and sl.yml both hold it at review tier. Packs run
+      # against every utterance and the matches merge, so the Hungarian pack was
+      # hour-muting Croatian and Slovene speakers for a word their own packs
+      # deliberately do not act on. Same tier as those two now; the directed
+      # Hungarian phrasings above still act.
+      - cigó
+      - cigo
+      - cigók
+      - cigok
+    context_required: true
+  # The clipped `cigó` has no neutral reading, and neither does the ethnonym with
+  # any of these in front of it.
+  - id: hu.hate.roma-directed
+    term: büdös cigány
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - budos cigany
+      - mocskos cigány
+      - mocskos cigany
+      - rohadt cigány
+      - rohadt cigany
+      - kurva cigány
+      - kurva cigany
+      - te cigány
+      - te cigany
+    context_required: false
+  # `néger` was the neutral Hungarian word within living memory and is still what
+  # an older speaker reaches for. Review tier.
+  - id: hu.hate.racial
+    term: néger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - neger
+      - négerek
+      - negerek
+      - négert
+      - negert
+    context_required: true
+  - id: hu.hate.racial-directed
+    term: büdös néger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - budos neger
+      - mocskos néger
+      - mocskos neger
+      - te néger
+      - te neger
+    context_required: false
+  - id: hu.hate.antisemitic
+    term: büdös zsidó
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - budos zsido
+      - mocskos zsidó
+      - mocskos zsido
+      - rohadt zsidó
+      - rohadt zsido
+      - gázkamrába veletek
+      - gazkamraba veletek
+      - heil hitler
+    context_required: false
+  # `fogyatékos` is the clinical word for disabled and `retardált` is used
+  # medically, so both are review tier; the directed forms below are not.
+  - id: hu.hate.ableist
+    term: retardált
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retardalt
+      - retardáltak
+      - retardaltak
+      - fogyatékos
+      - fogyatekos
+      - gyogyós
+      - gyogyos
+      - debil
+      - debilek
+    context_required: true
+  - id: hu.hate.ableist-directed
+    term: te retardált
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - te retardalt
+      - retardált vagy
+      - retardalt vagy
+      - kurva retardált
+      - kurva retardalt
+      - te debil
+      - te fogyatékos
+      - te fogyatekos
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: hu.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `öld meg magad` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file.
+  - id: hu.harassment.self-harm
+    term: öld meg magad
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - old meg magad
+      - öld meg magadat
+      - old meg magadat
+      - akaszd fel magad
+      - vágd fel az ereidet
+      - vagd fel az ereidet
+      - igyál fehérítőt
+      - igyal feheritot
+      - ugorj a vonat elé
+      - ugorj a vonat ele
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: hu.harassment.death-wish-ambiguous
+    term: dögölj meg
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - dogolj meg
+      - menj és halj meg
+      - menj es halj meg
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: hu.harassment.self-harm-disclosure
+    term: meg akarom ölni magam
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - meg akarom olni magam
+      - meg akarok halni
+      - nem akarok tovább élni
+      - nem akarok tovabb elni
+      - vágom magam
+      - vagom magam
+      - kms
+      - senkinek sem hiányoznék
+      - senkinek sem hianyoznek
+    context_required: true
+  # Directed abuse, five-minute mute. Bare swearing is deliberately absent for
+  # the same reason as in en.yml: in Hungarian voice chat it is punctuation.
+  - id: hu.harassment.abuse
+    term: baszd meg
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - kapd be
+      - menj a picsába
+      - menj a picsaba
+      - húzz el a picsába
+      - huzz el a picsaba
+      - kurva anyád
+      - kurva anyad
+      - anyád picsája
+      - anyad picsaja
+      - te geci
+      - geci vagy
+      - te faszfej
+      - te seggfej
+      - fogd be a pofád
+      - fogd be a pofad
+    context_required: false
+  - id: hu.harassment.insult
+    term: béna vagy
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - bena vagy
+      - szar vagy
+      - hülye vagy
+      - hulye vagy
+      - senki sem szeret téged
+      - senki sem szeret teged
+      - senki nem bír téged
+      - senki nem bir teged
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a house, a school, a family, a pistol.
+  - id: hu.threat.violence
+    term: tudom hol laksz
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - tudom a címedet
+      - tudom a cimedet
+      - megtaláltam a címedet
+      - megtalaltam a cimedet
+      - elmegyek a házadhoz
+      - elmegyek a hazadhoz
+      - megölöm a családodat
+      - megolom a csaladodat
+      - tudom melyik suliba jársz
+      - tudom melyik suliba jarsz
+      - viszek egy pisztolyt
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `megöllek` on its own is
+  # not listed anywhere in this pack, for the same reason en.yml does not list
+  # "I'll kill you".
+  - id: hu.threat.violence-ambiguous
+    term: leszúrlak
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - leszurlak
+      - lelőlek
+      - lelolek
+      - megkereslek és megöllek
+      - megkereslek es megollek
+      - szétverem a fejedet
+      - szetverem a fejedet
+    context_required: true
+  # Every variant names the school. `felrobbantom` without an object is what a
+  # player says about TNT.
+  - id: hu.threat.mass-violence
+    term: lelövöm az iskolát
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - lelovom az iskolat
+      - felrobbantom az iskolát
+      - felrobbantom az iskolat
+      - fegyvert viszek az iskolába
+      - fegyvert viszek az iskolaba
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: hu.threat.mass-violence-ambiguous
+    term: iskolai lövöldözés
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - iskolai lovoldozes
+    context_required: true
+  - id: hu.threat.sexual-violence
+    term: megerőszakollak
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - megeroszakollak
+      - megerőszakolom az anyádat
+      - megeroszakolom az anyadat
+    context_required: false
+  - id: hu.threat.doxxing
+    term: kiposztolom a címedet
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - kiposztolom a cimedet
+      - kiadom a címedet
+      - kiadom a cimedet
+      - doxxollak
+      - leddosollak
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: hu.threat.doxxing-ip
+    term: megvan az ip címed
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - megvan az ip cimed
+      - tudom az ip címedet
+      - tudom az ip cimedet
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: hu.sexual.explicit
+    term: szopd le
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - szopj le
+      - meg akarlak baszni
+      - mutasd a melleidet
+      - mutasd a cicidet
+      - küldj meztelen képet
+      - kuldj meztelen kepet
+      - küldj meztelen képeket
+      - kuldj meztelen kepeket
+      - küldj nudes
+      - kuldj nudes
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: hu.sexual.grooming
+    term: ne mondd el a szüleidnek
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ne mondd el a szuleidnek
+      - ne mondd el anyukádnak
+      - ne mondd el anyukadnak
+      - ne mondd el senkinek
+      - ez a mi titkunk
+      - maradjon köztünk
+      - maradjon koztunk
+      - vedd le a ruhádat
+      - vedd le a ruhadat
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `meztelen vagy` means "you have no armour on".
+  - id: hu.sexual.grooming-signal
+    term: egyedül vagy otthon
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - egyedul vagy otthon
+      - otthon vannak a szüleid
+      - otthon vannak a szuleid
+      - hány éves vagy
+      - hany eves vagy
+      - küldj egy képet
+      - kuldj egy kepet
+      - küldj képeket
+      - kuldj kepeket
+      - kapcsold be a kamerát
+      - kapcsold be a kamerat
+      - meztelen vagy
+      - adj hozzá a snapen
+      - adj hozza a snapen
+    context_required: true

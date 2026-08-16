@@ -1,0 +1,554 @@
+version: 1
+language: lv
+# See en.yml for the pack-wide policy and lt.yml for the Baltic mechanics, which
+# are the same here. Four things are specific to Latvian.
+#
+# **Nothing in this pack is fuzzy, and that is a measurement rather than a
+# preference.** Latvian is Latin script, so `_is_vowel` folds `ā ē ī ū` to real
+# vowels and `_fuzzy_token_matches` will swap one vowel for another inside its
+# budget. The first pattern anyone would reach for demonstrates why that is fatal
+# here: `pediņš` de-accents to `pedins`, and
+# `_fuzzy_token_matches('pedins', ..., 'pudins', ...)` returns True, so a fuzzy
+# rule on the slur accepts **pudiņš**, the ordinary Latvian word for pudding.
+# One vowel, an hour-long mute on somebody talking about dessert. Latvian also
+# declines in seven cases, so every fuzzy pattern here would sit closer to real
+# vocabulary than the Czech ones that had to be pulled. The whole pack is
+# `exact`, and the cost is stated rather than hidden: this pack has no
+# obfuscation tolerance, and a held-down letter defeats every rule in it.
+#
+# **Consonant marks are not folded, so every marked term is listed twice.**
+# `ā`/`a`, `ē`/`e`, `ī`/`i` and `ū`/`u` cost one vowel change and the matcher
+# absorbs them; `č`, `ģ`, `ķ`, `ļ`, `ņ`, `š` and `ž` stay distinct from their
+# bare forms. The transcriber drops all of them, so every pattern carrying any
+# mark ships a fully unmarked twin. Enforced by
+# `test_consonant_marked_terms_ship_a_de_accented_twin`.
+#
+# **`žīds` de-accents onto `zīds`, which is silk.** This is the `buzny`/`bezny`
+# collision from cs.yml in a different language and it is the reason the whole
+# `žīds` family sits at review tier. The transcriber that drops the caron also
+# drops the macron, so `man patīk zīds` -- "I like silk" -- reaches the matcher as
+# `man patik zids` and lands on the slur's de-accented twin. The two tokens are
+# identical after normalisation, so `allow:` cannot separate them either: an
+# allow entry equal to a listed pattern is refused by the loader, and rightly.
+# Review tier is the only tier that costs a staff glance instead of a mute.
+#
+# **Latin script means this pack shares an alphabet with en.yml and lt.yml.**
+# Every single-token pattern was checked against ordinary English and against the
+# Lithuanian pack. Bare `idiots` is deliberately absent even though it is the
+# ordinary Latvian noun: it is also the English plural of "idiot", and a server
+# with both packs enabled would alert on every English speaker who used it. The
+# directed phrase `tu esi idiots` carries the rule instead.
+#
+# Native review outstanding on the register calls: whether `nēģeris`, `čigāns`
+# and `žīds` are placed correctly at review tier, and whether the abuse and
+# doxxing phrasings are the ones a Latvian player would use rather than the ones
+# a dictionary suggests.
+allow:
+  # `nogalini sevi` is also how a player says "die and respawn at your bed". The
+  # term is the most valuable harassment entry in the pack, so the game reading
+  # is carved out rather than the rule weakened. It alone still flags.
+  - nogalini sevi lai atdzimtu
+  - nogalinies lai atdzimtu
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: lv.spam.server-ad
+    term: nāc uz manu serveri
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - nac uz manu serveri
+      - pievienojies manam serverim
+      - mana servera ip
+      - lūk mana servera ip
+      - luk mana servera ip
+    context_required: false
+  # Review tier for the same reason as en.spam.community-ad: a server that runs
+  # its own Discord hears this as ordinary talk.
+  - id: lv.spam.community-ad
+    term: pievienojies manam discordam
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - nāc uz manu discordu
+      - nac uz manu discordu
+    context_required: true
+  - id: lv.spam.free-items
+    term: bezmaksas dimanti
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - dimanti par velti
+      - dalu dimantus
+    context_required: true
+  # Servers run real giveaways and real donation stores, so this is review tier.
+  - id: lv.spam.giveaway-scam
+    term: bezmaksas rangi
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - spied uz saites
+      - uzspied uz saites
+      - ej uz šo saiti
+      - ej uz so saiti
+    context_required: true
+  - id: lv.spam.self-promo
+    term: abonē manu kanālu
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - abone manu kanalu
+      - abonējiet manu kanālu
+      - abonejiet manu kanalu
+      - skaties manu youtube
+      - spied abonēt
+      - spied abonet
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `exact`, and the header says why: as a fuzzy pattern the de-accented `pedins`
+  # accepts **pudins**, which is pudding.
+  #
+  # The whole `pederasts` family is deliberately absent, and it was in this rule
+  # until the cross-language check found it. Intersecting this pack's single-token
+  # patterns against every dictionary on the sweep box turned up `pederasts` in
+  # American and British English (the plural of `pederast`) and `pederasti` in
+  # Estonian and Swedish, where it is the ordinary noun for the practice. All
+  # three of those languages have a live pack, a server can enable several at
+  # once, and a mislabelled utterance is routed to whichever pack the detector
+  # picked -- so an English, Estonian or Swedish speaker discussing abuse would
+  # have taken a severity-3 mute from the Latvian pack. Only the oblique Latvian
+  # cases were clean, and a homophobic rule that catches nothing but the dative is
+  # not worth the line. `pediņš` and `pidars` cover the register. Same trade as
+  # the `fagot` carve-out in en.yml: recall is given up rather than bet on nobody
+  # ever saying an ordinary word in their own language.
+  - id: lv.hate.homophobic
+    term: pediņš
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pedins
+      - pediņi
+      - pedini
+      - pediņa
+      - pedina
+      - pidars
+      - pidari
+      - pidaram
+    context_required: false
+  # Pejorative "gejs" is ubiquitous and ambiguous in this register, and the word
+  # itself is the neutral Latvian noun. Review tier.
+  - id: lv.hate.homophobic-casual
+    term: tu esi gejs
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - tu gejs
+      - cik tu gejs
+      - tas ir gejs
+    context_required: true
+  # `čurka` is a Russian-borrowed slur for people from the Caucasus and Central
+  # Asia and is not a Latvian word, which is why it can sit at mute tier while
+  # `nēģeris` below cannot. `kacaps` is aimed at Russians and is likewise not
+  # ordinary Latvian.
+  - id: lv.hate.slur-racial
+    term: čurka
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - curka
+      - čurkas
+      - curkas
+      - čurku
+      - curku
+      - kacaps
+      - kacapi
+      - kacapu
+      - melnpauris
+      - melnpauri
+    context_required: false
+  # `nēģeris` was the ordinary Latvian noun for decades and older speakers still
+  # use it without meaning anything by it; `čigāns` is likewise the everyday word
+  # many Latvians still use for Roma. `žīds` is here for a different reason,
+  # given in the header: its de-accented twin `zids` is also `zīds`, silk, and the
+  # matcher cannot tell the two apart once the transcriber has dropped the marks.
+  # The genitive `žīda` is not listed at all: it de-accents to `zida`, which is an
+  # ordinary word in Slovene and Danish, both of which now have a pack. Review
+  # tier for the rest: staff see every one, nobody is muted by one.
+  - id: lv.hate.slur-ambiguous
+    term: nēģeris
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negeris
+      - nēģeri
+      - negeri
+      - nēģera
+      - negera
+      - čigāns
+      - cigans
+      - čigāni
+      - cigani
+      - čigāna
+      - cigana
+      - žīds
+      - zids
+      - žīdi
+      - zidi
+    context_required: true
+  # The directed forms carry the automatic action, the same split as
+  # cs.hate.slur-directed. Deliberately no `tu esi žīds`: its de-accented twin is
+  # `tu esi zids`, and while nobody says "you are silk" the whole point of the
+  # review-tier call above is that this pack does not bet a mute on that.
+  - id: lv.hate.slur-directed
+    term: tu esi nēģeris
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tu esi negeris
+      - tu esi čigāns
+      - tu esi cigans
+      - tu esi čurka
+      - tu esi curka
+    context_required: false
+  - id: lv.hate.antisemitic
+    term: žīdus gāzes kamerā
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - zidus gazes kamera
+      - nāve žīdiem
+      - nave zidiem
+      - netīrais žīds
+      - netirais zids
+      - heil hitler
+      - zig heil
+    context_required: false
+  # `debīls` and `dauns` are the two generic insults of Latvian schoolyard speech
+  # and most of the time neither is aimed at a disabled person. Bare mention is
+  # review tier, the directed rule below carries the action. Bare `idiots` is
+  # absent: see the header.
+  - id: lv.hate.ableist
+    term: debīls
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - debils
+      - debīlais
+      - debilais
+      - dauns
+      - dauni
+      - dauna
+      - garīgi atpalicis
+      - garigi atpalicis
+    context_required: true
+  - id: lv.hate.ableist-directed
+    term: tu esi debīls
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - tu esi debils
+      - tu esi dauns
+      - tu esi idiots
+      - tu esi garīgi atpalicis
+      - tu esi garigi atpalicis
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: lv.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Stays at severity 3. The respawn reading is carved out by the allow entries
+  # at the top of this file rather than by weakening the rule.
+  - id: lv.harassment.self-harm
+    term: nogalini sevi
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - nogalinies
+      - pakaries
+      - ej pakaries
+      - pārgriez sev vēnas
+      - pargriez sev venas
+      - izdzer balinātāju
+      - izdzer balinataju
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: lv.harassment.death-wish-ambiguous
+    term: nosprāgsti
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - nospragsti
+      - ej nosprāgsti
+      - ej nospragsti
+      - labāk nomirsti
+      - labak nomirsti
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: lv.harassment.self-harm-disclosure
+    term: gribu sevi nogalināt
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - gribu sevi nogalinat
+      - gribu nomirt
+      - vairs negribu dzīvot
+      - vairs negribu dzivot
+      - griežu sevi
+      - griezu sevi
+      - kms
+      - neviens pēc manis neskumtu
+      - neviens pec manis neskumtu
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, for the same reason as in en.yml and cs.yml.
+  - id: lv.harassment.abuse
+    term: ej dirst
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - ej tu dirst
+      - aizveries dirsā
+      - aizveries dirsa
+      - tu esi mērglis
+      - tu esi merglis
+      - tu esi maita
+      - tu esi nelietis
+      - tu esi sūds
+      - tu esi suds
+    context_required: false
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing a
+  # repeat offender, not worth a mute the first time.
+  - id: lv.harassment.insult
+    term: tu esi lūzeris
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - tu esi luzeris
+      - tu esi nulle
+      - tevi neviens nemīl
+      - tevi neviens nemil
+      - tu nevienam neesi vajadzīgs
+      - tu nevienam neesi vajadzigs
+      - visi tevi ienīst
+      - visi tevi ienist
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family. Bare `es tevi nogalināšu` is
+  # deliberately absent -- it is what a player says before a PvP round.
+  - id: lv.threat.violence
+    term: es zinu kur tu dzīvo
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - es zinu kur tu dzivo
+      - es zinu tavu adresi
+      - es atradu tavu adresi
+      - es zinu tavu skolu
+      - es atnākšu pie tevis mājās
+      - es atnaksu pie tevis majas
+      - es atbraukšu pie tevis mājās
+      - es atbrauksu pie tevis majas
+      - es nogalināšu tavu ģimeni
+      - es nogalinasu tavu gimeni
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: lv.threat.violence-ambiguous
+    term: es tevi nošaušu
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - es tevi nosausu
+      - es tevi saduršu
+      - es tevi sadursu
+      - es tevi piekaušu
+      - es tevi piekausu
+      - es tevi atradīšu un nogalināšu
+      - es tevi atradisu un nogalinasu
+    context_required: true
+  - id: lv.threat.mass-violence
+    term: apšaušu skolu
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - apsausu skolu
+      - uzspridzināšu skolu
+      - uzspridzinasu skolu
+      - atnākšu uz skolu ar ieroci
+      - atnaksu uz skolu ar ieroci
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: lv.threat.mass-violence-ambiguous
+    term: šaušana skolā
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - sausana skola
+    context_required: true
+  - id: lv.threat.sexual-violence
+    term: es tevi izvarošu
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - es tevi izvarosu
+      - izvarošu tevi
+      - izvarosu tevi
+      - izvarošu tavu mammu
+      - izvarosu tavu mammu
+    context_required: false
+  - id: lv.threat.doxxing
+    term: publicēšu tavu adresi
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - publicesu tavu adresi
+      - izlikšu tavu adresi
+      - izliksu tavu adresi
+      - nosūtīšu visiem tavu adresi
+      - nosutisu visiem tavu adresi
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: lv.threat.doxxing-ip
+    term: man ir tava ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - es zinu tavu ip
+      - uztaisīšu tev ddos
+      - uztaisisu tev ddos
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: lv.sexual.explicit
+    term: gribu tevi izdrāzt
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - gribu tevi izdrazt
+      - parādi krūtis
+      - paradi krutis
+      - parādi pupus
+      - paradi pupus
+      - atsūti kailfoto
+      - atsuti kailfoto
+      - atsūti kailas bildes
+      - atsuti kailas bildes
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these name the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: lv.sexual.grooming
+    term: nestāsti vecākiem
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nestasti vecakiem
+      - nestāsti mammai
+      - nestasti mammai
+      - nevienam nestāsti par to
+      - nevienam nestasti par to
+      - tas būs mūsu noslēpums
+      - tas bus musu noslepums
+      - tas ir mūsu noslēpums
+      - tas ir musu noslepums
+      - novelc drēbes
+      - novelc drebes
+    context_required: false
+  # The same approach where it is still ambiguous, plus the two phrasings a
+  # Minecraft player uses about armour: `vai tu esi kails` means "are you wearing
+  # armour" on any survival server, and `cik tev gadu` is a question children ask
+  # each other constantly. Review tier.
+  - id: lv.sexual.grooming-signal
+    term: vai tu esi viens mājās
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - vai tu esi viens majas
+      - vai tu esi viena mājās
+      - vai tu esi viena majas
+      - vai vecāki ir mājās
+      - vai vecaki ir majas
+      - vai mamma ir mājās
+      - vai mamma ir majas
+      - vai tu esi kails
+      - vai tu esi kaila
+      - cik tev gadu
+      - atsūti savu bildi
+      - atsuti savu bildi
+      - pievieno mani snapchatā
+      - pievieno mani snapchata
+      - ieslēdz kameru
+      - iesledz kameru
+    context_required: true

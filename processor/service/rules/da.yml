@@ -1,0 +1,505 @@
+version: 1
+language: da
+# See en.yml for the pack-wide policy. Five things are specific to Danish.
+#
+# **No fuzzy rules at all, and the two best candidates are why.** `perker` is the
+# highest-value slur in this pack and at six characters it has a two-run budget,
+# which accepts **parker**, the ordinary Danish verb "to park". `spasser` accepts
+# **spiser**, "eats": one vowel swapped and one run shortened is exactly two
+# changes. Neither collision is exotic and neither is in a place a dictionary
+# sweep would have been needed to find. Everything here is `exact`.
+#
+# **Only `å` needs a de-accented twin.** `æ` (U+00E6) and `ø` (U+00F8) have no
+# canonical decomposition, so NFKD leaves them alone and
+# `test_consonant_marked_terms_ship_a_de_accented_twin` never asks for a twin of
+# them. `å` does decompose, so every pattern containing it ships an `a` spelling.
+# Note the consequence for the matcher: `_is_vowel` reads the NFKD base letter,
+# so `æ` and `ø` are treated as consonants. That costs nothing here because
+# nothing in this file is fuzzy.
+#
+# **`hold kæft` is not in this pack, and `hold din kæft` is.** Bare `hold kæft`
+# is everyday Danish emphasis, closer to "wow" than to "shut up": "hold kæft hvor
+# er det sjovt" is a compliment. Only the directed form with `din` is listed.
+#
+# **`kys` is not in this pack, and cannot be.** It is the ordinary Danish word
+# for "kiss". It is also the abbreviation en.yml lists as a severity-3
+# harassment term, which is fine there and would be an hour-long mute here.
+#
+# **`svans` was drafted here and removed.** It is a Danish slur for a gay man and
+# it is also the ordinary Swedish word for "tail", and sv.yml may be enabled on
+# the same server.
+#
+# Native review still outstanding: whether `neger`, which is at mute tier here,
+# should be at review tier given that older speakers used it neutrally; whether
+# `sigøjner` at review tier is too soft; and whether `skoleskyderi` should carry
+# the bare noun at all, given that a news discussion reaches it. en.yml makes the
+# same call for `school shooting`, so this file follows it rather than differing
+# quietly.
+allow:
+  # How a player says "die so you respawn at your bed". Both spellings, because
+  # the transcriber drops the ring on `å` about half the time.
+  - dræb dig selv så du respawner
+  - dræb dig selv sa du respawner
+  - dræb dig selv og respawn
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: da.spam.server-ad
+    term: kom ind på min server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kom ind pa min server
+      - kom på min server
+      - kom pa min server
+      - join min server
+      - besøg min server
+      - min server ip er
+    context_required: false
+  # Review tier: a server that runs its own Discord hears this all day.
+  - id: da.spam.community-ad
+    term: join min discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kom ind på min discord
+      - kom ind pa min discord
+    context_required: true
+  - id: da.spam.free-items
+    term: gratis diamanter
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis ting
+    context_required: true
+  # Servers run real giveaways, so staff decide whether the offer is theirs.
+  - id: da.spam.giveaway-scam
+    term: gratis ranks
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis rang
+      - gratis robux
+      - gratis minecoins
+      - gratis gavekort
+      - klik på linket
+      - klik pa linket
+      - klik på mit link
+      - klik pa mit link
+    context_required: true
+  - id: da.spam.self-promo
+    term: abonner på min kanal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - abonner pa min kanal
+      - abonner på min youtube
+      - abonner pa min youtube
+      - tjek min youtube
+      - se min youtube
+      - følg mig på twitch
+      - følg mig pa twitch
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `negeren` was drafted as a Danish definite form and removed: it is the
+  # ordinary Dutch verb "to ignore" and nl.yml may be enabled on the same server.
+  - id: da.hate.nword
+    term: neger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negere
+      - negerne
+      - nigger
+      - niggere
+      - nigga
+    context_required: false
+  - id: da.hate.slur-ethnic
+    term: perker
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - perkere
+      - perkerne
+      - perkersvin
+      - muslimsvin
+      - sorte svin
+    context_required: false
+  # `sigøjner` is still the everyday word many older Danes use without malice,
+  # `mongol` is still the word for somebody from Mongolia, and `tøsedreng` is
+  # closer to "sissy" than to a slur. Staff see these, nobody is muted by one.
+  - id: da.hate.slur-ambiguous
+    term: sigøjner
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sigøjnere
+      - mongol
+      - mongoler
+      - tøsedreng
+      - tøsedrenge
+    context_required: true
+  - id: da.hate.slur-directed
+    term: din perker
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - din beskidte perker
+      - i perkere
+      - din sigøjner
+      - din mongol
+      - skrid hjem til dit eget land
+      - tag hjem til dit eget land
+    context_required: false
+  # `bøsse` on its own is the neutral word for a gay man, and it is also a
+  # shotgun and a collection box, so every pattern here needs its second word or
+  # its compound.
+  - id: da.hate.homophobic
+    term: bøsserøv
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - bøsserøve
+      - bøssesvin
+      - bøssekarl
+      - beskidte bøsse
+    context_required: false
+  # Pejorative `bøsset` is ubiquitous in Danish voice chat. Review tier: a
+  # moderator watching one account repeat it is the useful output, not a mute.
+  - id: da.hate.homophobic-casual
+    term: det er bøsset
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - du er bøsset
+      - så bøsset
+      - sa bøsset
+      - din bøsse
+      - fucking bøsse
+    context_required: true
+  - id: da.hate.antisemitic
+    term: heil hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sieg heil
+      - jøderne i gaskammeret
+      - jøder i gaskammeret
+      - jødesvin
+      - beskidte jøde
+    context_required: false
+  # `evnesvag` and `retarderet` are clinical words before they are insults.
+  # Review tier for the bare terms; the directed rule below carries the action.
+  - id: da.hate.ableist
+    term: spasser
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - spassere
+      - spasserne
+      - evnesvag
+      - evnesvage
+      - retarderet
+      - retarderede
+    context_required: true
+  - id: da.hate.ableist-directed
+    term: din spasser
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - du er spasser
+      - du er en spasser
+      - dit spasserhoved
+      - du er evnesvag
+      - din evnesvage idiot
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: da.hate.slur-english
+    term: niggers
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Severity 3. Danish marks the reflexive with `dig selv`, so unlike German none
+  # of these collides with the transitive "I'll kill you"; the only carve-out
+  # needed is the respawn instruction, in `allow:` at the top of the file.
+  - id: da.harassment.self-harm
+    term: dræb dig selv
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - slå dig selv ihjel
+      - sla dig selv ihjel
+      - tag dig selv af dage
+      - hæng dig selv
+      - begå selvmord
+      - bega selvmord
+      - spring ud foran toget
+      - spring ud foran et tog
+      - skær håndleddene over
+      - skær handleddene over
+      - skær dig selv
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: da.harassment.death-wish-ambiguous
+    term: gå hen og dø
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - ga hen og dø
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: da.harassment.self-harm-disclosure
+    term: jeg vil tage mit eget liv
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - jeg vil slå mig selv ihjel
+      - jeg vil sla mig selv ihjel
+      - jeg vil dø
+      - jeg vil ikke leve mere
+      - jeg skærer i mig selv
+      - kms
+      - ingen ville savne mig
+    context_required: true
+  # Directed abuse, five-minute mute. Bare `for helvede` and bare `lort` are
+  # deliberately absent: in Danish voice chat they are punctuation.
+  - id: da.harassment.abuse
+    term: hold din kæft
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - hold nu din kæft
+      - fuck dig
+      - fuck din mor
+      - din luder
+      - din lort
+      - dit svin
+      - dit røvhul
+      - din narrøv
+      - skrid ad helvede til
+      - din mor er en luder
+    context_required: false
+  # Trash talk that is directed but mild. Bare `hold kæft` is deliberately not
+  # here either: "hold kæft hvor er det sjovt" is a compliment, and a review-tier
+  # report on it is staff noise rather than moderation.
+  - id: da.harassment.insult
+    term: du er dum
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - du er så dum
+      - du er sa dum
+      - du sutter
+      - du er en taber
+      - du er værdiløs
+      - du er ubrugelig
+      - ingen kan lide dig
+      - alle hader dig
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a front door, a school, a family, a pistol.
+  - id: da.threat.violence
+    term: jeg ved hvor du bor
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jeg kender din adresse
+      - jeg har din adresse
+      - jeg ved hvilken skole du går på
+      - jeg ved hvilken skole du gar pa
+      - jeg kommer hjem til dig
+      - jeg står uden for din dør
+      - jeg star uden for din dør
+      - jeg slår din familie ihjel
+      - jeg slar din familie ihjel
+      - jeg tager en pistol med
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows.
+  - id: da.threat.violence-ambiguous
+    term: jeg stikker dig ned
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jeg skyder dig
+      - jeg banker dig
+      - jeg smadrer dig
+      - jeg finder dig og slår dig ihjel
+      - jeg finder dig og slar dig ihjel
+    context_required: true
+  - id: da.threat.mass-violence
+    term: jeg laver et skoleskyderi
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jeg tager en pistol med i skole
+      - jeg sprænger skolen i luften
+      - jeg skyder løs på skolen
+      - jeg skyder løs pa skolen
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: da.threat.mass-violence-ambiguous
+    term: skoleskyderi
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: da.threat.sexual-violence
+    term: jeg voldtager dig
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jeg vil voldtage dig
+      - jeg voldtager din mor
+      - jeg voldtager din søster
+    context_required: false
+  # Armed police at a child's front door. No gameplay reading, so severity 3 and
+  # kept separate from doxxing.
+  - id: da.threat.swatting
+    term: jeg sender politiet hjem til dig
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - jeg sender politiet hen til dig
+      - jeg får politiet til at komme hjem til dig
+      - jeg far politiet til at komme hjem til dig
+      - jeg swatter dig
+    context_required: false
+  - id: da.threat.doxxing
+    term: jeg doxxer dig
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - jeg doxer dig
+      - jeg lækker din adresse
+      - jeg poster din adresse
+      - jeg lægger din adresse ud
+      - jeg deler din adresse
+    context_required: false
+  # In Minecraft an IP is the server address every player types to connect.
+  - id: da.threat.doxxing-ip
+    term: jeg har din ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - jeg kender din ip
+      - jeg lækker din ip
+      - jeg ddoser dig
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: da.sexual.explicit
+    term: sut min pik
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - sut mine nosser
+      - jeg vil kneppe dig
+      - vis mig dine patter
+      - vis mig dine bryster
+      - vis mig din fisse
+      - send nudes
+      - send mig nudes
+      - send mig nøgenbilleder
+      - send mig et nøgenbillede
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these catch the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: da.sexual.grooming
+    term: sig det ikke til dine forældre
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - fortæl det ikke til dine forældre
+      - sig det ikke til din mor
+      - sig det ikke til nogen
+      - det er vores lille hemmelighed
+      - det bliver mellem os to
+      - tag tøjet af
+      - tag dit tøj af
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `er du nøgen` means "are you wearing armour" on any
+  # survival server.
+  - id: da.sexual.grooming-signal
+    term: er du alene hjemme
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - er dine forældre hjemme
+      - er din mor hjemme
+      - er du nøgen
+      - hvor gammel er du egentlig
+      - du er så moden af din alder
+      - du er sa moden af din alder
+      - send mig et billede
+      - send mig billeder
+      - tilføj mig på snap
+      - tilføj mig pa snap
+      - tænd for dit kamera
+      - skal vi videochatte
+    context_required: true

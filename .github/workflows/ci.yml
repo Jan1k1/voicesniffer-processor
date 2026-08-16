@@ -1,0 +1,138 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: lint + tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: install libopus
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libopus0
+
+      - name: runtime package
+        working-directory: processor/runtime
+        run: |
+          uv sync --frozen
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest -q
+
+      - name: service package
+        working-directory: processor/service
+        run: |
+          uv sync --frozen
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest -q
+
+  container:
+    name: image builds, starts, and is self-sufficient
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: compose files parse
+        run: |
+          docker compose -f docker/m2/docker-compose.yml config -q
+          docker compose -f docker/m2/docker-compose.yml \
+                         -f docker/m2/docker-compose.build.yml config -q
+
+      - name: build
+        run: docker build -f processor/service/Dockerfile -t voicesniffer-processor:ci .
+
+      - name: the image carries at least 23 rule packs
+        run: |
+          set -eu
+          packs=$(docker run --rm --entrypoint sh voicesniffer-processor:ci -c 'ls /app/rules/*.yml | wc -l')
+          echo "rule packs: $packs"
+          test "$packs" -ge 23 || { echo "found $packs"; exit 1; }
+
+      - name: every required setting is defaulted except the token
+        run: |
+          set -eu
+          docker run --rm --entrypoint sh voicesniffer-processor:ci -c '
+            set -eu
+            for var in VOICESNIFFER_MODEL_ID VOICESNIFFER_MODELS_DIR VOICESNIFFER_RULES_DIR; do
+              eval "value=\${$var:-}"
+              test -n "$value" || { echo "MISSING DEFAULT: $var"; exit 1; }
+              echo "$var=$value"
+            done
+            test -z "${VOICESNIFFER_TOKENS_FILE:-}" || {
+              echo "the token file must not have a default"; exit 1; }
+          '
+
+      - name: it starts healthy with a token file and nothing else
+        run: |
+          set -eux
+          docker run -d --name hc \
+            --health-start-period=600s \
+            -e VOICESNIFFER_MODEL_ID=moonshine-tiny-v2-en \
+            -e VOICESNIFFER_TOKENS_FILE=/run/secrets/tokens \
+            -v "$PWD/docker/m2/tokens.example.json:/run/secrets/tokens:ro" \
+            voicesniffer-processor:ci
+          for _ in $(seq 1 90); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' hc 2>/dev/null || echo none)
+            [ "$status" = healthy ] && break
+            [ "$(docker inspect -f '{{.State.Running}}' hc)" = false ] && break
+            sleep 5
+          done
+          docker logs hc
+          test "$(docker inspect -f '{{.State.Health.Status}}' hc)" = healthy
+
+      - name: unauthenticated moderation is refused
+        run: |
+          set -eu
+          code=$(docker exec hc /app/.venv/bin/python -c "
+          import urllib.error, urllib.request
+          request = urllib.request.Request(
+              'http://127.0.0.1:8080/v1/moderate',
+              data=b'',
+              method='POST',
+              headers={'Content-Type': 'application/vnd.voicesniffer.opus.v1'},
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=5) as response:
+                  print(response.status)
+          except urllib.error.HTTPError as error:
+              print(error.code)
+          ")
+          echo "unauthenticated POST /v1/moderate -> $code"
+          case "$code" in
+            401|403) ;;
+            *) echo "expected 401 or 403, got $code"; exit 1 ;;
+          esac
+
+      - name: tear down
+        if: always()
+        run: docker rm -f hc || true
+
+      - name: the suite runs inside the image
+        run: |
+          docker build -f processor/service/Dockerfile --target test -t voicesniffer-processor:ci-test .
+          docker run --rm voicesniffer-processor:ci-test

@@ -1,0 +1,617 @@
+version: 1
+language: el
+# See en.yml for the pack-wide policy. Four things are specific to Greek, and all
+# four were measured against `normalize_transcript` rather than assumed.
+#
+# **Final sigma does not survive normalisation.** ``normalize_transcript`` runs
+# NFKC then ``casefold``, and Unicode full case folding maps ς (U+03C2) onto
+# σ (U+03C3). So ΠΟΥΣΤΗΣ, πούστης and πουστησ all normalise to a string ending
+# in σ, and ΣΣ, σς and ς all collapse the same way. The terms below are therefore
+# written the way the matcher stores them, with a medial σ in final position:
+# `πούστησ` is `πούστης`, and the trailing σ is not a typo. The loader would
+# normalise a naturally spelled ς for us, but writing the stored form keeps what
+# the file says and what the matcher holds identical.
+#
+# **Tonos survives, so an accented term and its bare twin are two patterns.**
+# NFKC does not decompose ά έ ή ί ό ύ ώ, and casefold leaves them alone, so
+# `μαλάκα` and `μαλακα` are different strings to the matcher. `_is_vowel` asks
+# whether the NFKD base letter is one of `aeiouy`, which no Greek letter is, so
+# the fuzzy matcher cannot absorb a dropped tonos either. Every accented term
+# here ships its de-accented twin, which is what the shipped transcriber emits
+# about half the time.
+#
+# **ΐ and ΰ break a token in two.** Full case folding decomposes U+0390 and
+# U+03B0 into a base vowel plus two combining marks, and combining marks are not
+# alphanumeric, so ``normalize_transcript`` turns them into spaces: `ΐ` comes out
+# as a bare `ι` with the word split around it. Nothing in this pack uses them.
+# Dialytika without tonos (ϊ, ϋ) is a single codepoint and survives, but it still
+# needs the de-accented twin.
+#
+# **Fuzzy in Greek only absorbs held-down letters.** Because no Greek letter is a
+# vowel to `_is_vowel`, a differing run may change its length but never its
+# letter, so the accept set of a Greek fuzzy pattern is exactly the elongations
+# of it. That is a much narrower set than the Latin packs get, and it is why
+# el.hate.homophobic can afford to be fuzzy: `κωλομπαράσ` reaches
+# `κκωλομπαράσ` and `κωλομπααράσ` and nothing else. el_GR.dic is 828,806
+# entries and 825,837 distinct tokens after normalisation, and none of them
+# fires this pack. That the distinct count is that large is itself the check
+# that the sweep read the file: el_GR.aff declares ISO8859-7, and a UTF-8 read
+# collapses the whole dictionary to replacement characters and reports a clean
+# pass having examined one token.
+#
+# Native review still outstanding on the register calls, in particular whether
+# `γύφτος` and `αράπης` belong at review tier rather than mute tier to a Greek
+# speaker, and whether the threat phrasings read as threats rather than as the
+# ordinary hyperbole of an argument.
+allow:
+  # `σκοτώσου` is also how a player says "die and reset your spawn point". The
+  # phrase is the most valuable harassment term in the pack, so the game reading
+  # is carved out rather than the rule weakened. `σκοτώσου` alone still flags.
+  - σκοτώσου για να ξαναγεννηθείσ
+  - σκοτωσου για να ξαναγεννηθεισ
+  - σκοτώσου και ξαναγεννήσου
+  - σκοτωσου και ξαναγεννησου
+  - σκοτώσου για respawn
+  - σκοτωσου για respawn
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: el.spam.server-ad
+    term: μπεσ στο σέρβερ μου
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - μπεσ στο σερβερ μου
+      - μπεσ στον σέρβερ μου
+      - μπεσ στον σερβερ μου
+      - έλα στο σέρβερ μου
+      - ελα στο σερβερ μου
+      - το ip μου είναι
+      - το ip μου ειναι
+    context_required: false
+  # Review tier for the same reason as en.yml: a server that runs its own Discord
+  # hears this said honestly all day.
+  - id: el.spam.community-ad
+    term: μπεσ στο discord μου
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - μπεσ στο ντισκορντ μου
+      - έλα στο discord μου
+      - ελα στο discord μου
+    context_required: true
+  - id: el.spam.free-items
+    term: δωρεάν διαμάντια
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - δωρεαν διαμαντια
+      - δωρεάν αντικείμενα
+      - δωρεαν αντικειμενα
+    context_required: true
+  - id: el.spam.self-promo
+    term: κάντε εγγραφή στο κανάλι μου
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - καντε εγγραφη στο καναλι μου
+      - κάνε εγγραφή στο κανάλι μου
+      - κανε εγγραφη στο καναλι μου
+      - δείτε το κανάλι μου
+      - δειτε το καναλι μου
+      - μπείτε στο κανάλι μου
+      - μπειτε στο καναλι μου
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The only fuzzy rule in this pack, and it is safe for a reason specific to the
+  # script rather than to the words: a Greek letter is never a vowel to
+  # `_is_vowel`, so a differing run may only change length. The accept set is the
+  # elongations, which is exactly the obfuscation a shouted slur produces.
+  # `πούστρα` and `πούστησ` share a run count, and the matcher refuses the pair
+  # on the ρ/η mismatch, so the review-tier rule below is not shadowed by this
+  # one.
+  - id: el.hate.homophobic
+    term: κωλομπαράσ
+    category: hate
+    severity: 3
+    match: fuzzy
+    variants:
+      - κωλομπαρασ
+      - κωλομπαρά
+      - κωλομπαρα
+      - κωλομπαράδεσ
+      - κωλομπαραδεσ
+      - πούστρα
+      - πουστρα
+      - πούστρεσ
+      - πουστρεσ
+      - αδερφάρα
+      - αδερφαρα
+      - αδελφάρα
+      - αδελφαρα
+    context_required: false
+  # `ρε πούστη` is the most common interjection in spoken Greek and usually means
+  # nothing worse than "bloody hell"; it is also the slur, said to somebody.
+  # Review tier: staff see the pattern build up, nobody is muted for swearing at
+  # a creeper.
+  - id: el.hate.homophobic-ambiguous
+    term: πούστησ
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - πουστησ
+      - πούστη
+      - πουστη
+      - πούστηδεσ
+      - πουστηδεσ
+      - πουστάκι
+      - πουστακι
+    context_required: true
+  # `γύφτος` is in every Greek dictionary and does duty as "scruffy" and "stingy"
+  # as well as the ethnic slur, and it is a surname. `τσιγγάνος` is the neutral
+  # ethnonym. Review tier for the bare mention; the directed rule below carries
+  # the action.
+  - id: el.hate.roma
+    term: γύφτοσ
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - γυφτοσ
+      - γύφτο
+      - γυφτο
+      - γύφτοι
+      - γυφτοι
+      - γύφτουσ
+      - γυφτουσ
+      - γύφτισσα
+      - γυφτισσα
+      - γυφταριό
+      - γυφταριο
+      - τσιγγάνοσ
+      - τσιγγανοσ
+      - τσιγγάνα
+      - τσιγγανα
+    context_required: true
+  - id: el.hate.roma-directed
+    term: ρε γύφτε
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ρε γυφτε
+      - είσαι γύφτοσ
+      - εισαι γυφτοσ
+      - βρωμογύφτε
+      - βρωμογυφτε
+      - βρωμόγυφτοσ
+      - βρωμογυφτοσ
+    context_required: false
+  # `αράπης` is an old folk word for a dark-skinned person, still the name of a
+  # character in shadow theatre and a common surname, and now also a slur.
+  # `νέγρος` was neutral within living memory. Review tier for both.
+  - id: el.hate.racial
+    term: αράπησ
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - αραπησ
+      - αράπη
+      - αραπη
+      - αραπίνα
+      - αραπινα
+      - νέγροσ
+      - νεγροσ
+      - νέγρα
+      - νεγρα
+      - νέγροι
+      - νεγροι
+    context_required: true
+  - id: el.hate.racial-directed
+    term: βρωμοαράπη
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - βρωμοαραπη
+      - βρωμοαράπησ
+      - βρωμοαραπησ
+      - βρωμοαλβανέ
+      - βρωμοαλβανε
+      - βρωμοαλβανόσ
+      - βρωμοαλβανοσ
+      - τουρκόσπορε
+      - τουρκοσπορε
+      - τουρκόσποροσ
+      - τουρκοσποροσ
+    context_required: false
+  - id: el.hate.antisemitic
+    term: χάιλ χίτλερ
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - χαιλ χιτλερ
+      - ζήτω ο χίτλερ
+      - ζητω ο χιτλερ
+      - βρωμοεβραίε
+      - βρωμοεβραιε
+      - βρωμοεβραίοσ
+      - βρωμοεβραιοσ
+    context_required: false
+  # `καθυστερημένος` is the ordinary Greek word for "delayed": a late train, a
+  # late payment, a slow download. It is also the ableist slur. Review tier for
+  # the bare word, and the directed rule below is where the action is.
+  # `μογγόλος` is also the nationality.
+  - id: el.hate.ableist
+    term: καθυστερημένοσ
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - καθυστερημενοσ
+      - καθυστερημένη
+      - καθυστερημενη
+      - καθυστερημένε
+      - καθυστερημενε
+      - μογγόλοσ
+      - μογγολοσ
+      - μογγόλε
+      - μογγολε
+    context_required: true
+  - id: el.hate.ableist-directed
+    term: είσαι καθυστερημένοσ
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - εισαι καθυστερημενοσ
+      - ρε καθυστερημένε
+      - ρε καθυστερημενε
+      - ρε μογγόλε
+      - ρε μογγολε
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: el.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `σκοτώσου` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file. Bare `πέθανε` and bare `ψόφησε` are
+  # deliberately absent: both are also the ordinary past tense, so "ο υπολογιστήσ
+  # ψόφησε" is somebody saying their computer died. Bare `κρεμάσου` was here and
+  # is gone for the same reason: it is an el_GR.dic headword and the reflexive
+  # also means "hang on to it", so "κρεμάσου από τη σκάλα" was an hour-long mute.
+  # The unambiguous phrasing is listed instead.
+  - id: el.harassment.self-harm
+    term: σκοτώσου
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - σκοτωσου
+      - πήγαινε να σκοτωθείσ
+      - πηγαινε να σκοτωθεισ
+      - πήγαινε να αυτοκτονήσεισ
+      - πηγαινε να αυτοκτονησεισ
+      - πήγαινε να κρεμαστείσ
+      - πηγαινε να κρεμαστεισ
+      - κόψε τισ φλέβεσ σου
+      - κοψε τισ φλεβεσ σου
+      - πιεσ χλωρίνη
+      - πιεσ χλωρινη
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: el.harassment.death-wish-ambiguous
+    term: άντε ψόφα
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - αντε ψοφα
+      - ψόφα ρε
+      - ψοφα ρε
+      - άντε πέθανε
+      - αντε πεθανε
+      - να πεθάνεισ
+      - να πεθανεισ
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: el.harassment.self-harm-disclosure
+    term: θέλω να αυτοκτονήσω
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - θελω να αυτοκτονησω
+      - θέλω να πεθάνω
+      - θελω να πεθανω
+      - δεν θέλω να ζω
+      - δεν θελω να ζω
+      - κόβομαι
+      - κοβομαι
+      - kms
+      - κανείσ δεν θα με θυμηθεί
+      - κανεισ δεν θα με θυμηθει
+    context_required: true
+  # Directed abuse, five-minute mute. Bare profanity is deliberately absent for
+  # the same reason as in en.yml and cs.yml: in Greek voice chat it is
+  # punctuation, and filtering it produces noise rather than moderation.
+  - id: el.harassment.abuse
+    term: άντε γαμήσου
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - αντε γαμησου
+      - γαμήσου
+      - γαμησου
+      - σκάσε ρε μαλάκα
+      - σκασε ρε μαλακα
+      - άι στο διάολο
+      - αι στο διαολο
+      - ρε καριόλη
+      - ρε καριολη
+      - είσαι καριόλησ
+      - εισαι καριολησ
+      - μουνόπανο
+      - μουνοπανο
+      - ρε μπάσταρδε
+      - ρε μπασταρδε
+      - γαμώ το σπίτι σου
+      - γαμω το σπιτι σου
+    context_required: false
+  # `μαλάκα` is the single most frequent word in casual spoken Greek and is how
+  # friends address each other. Review tier at severity 1: the useful output is a
+  # moderator seeing it aimed at one person over and over, not a mute.
+  - id: el.harassment.address-casual
+    term: μαλάκα
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - μαλακα
+      - μαλάκασ
+      - μαλακασ
+      - μαλάκεσ
+      - μαλακεσ
+      - μαλακίασ
+      - μαλακιασ
+      - βλάκασ
+      - βλακασ
+      - ηλίθιε
+      - ηλιθιε
+    context_required: true
+  - id: el.harassment.insult
+    term: είσαι άχρηστοσ
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - εισαι αχρηστοσ
+      - είσαι χάλια
+      - εισαι χαλια
+      - κανείσ δεν σε συμπαθεί
+      - κανεισ δεν σε συμπαθει
+      - δεν σε θέλει κανείσ
+      - δεν σε θελει κανεισ
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family, a pistol. `θα φέρω όπλο` was
+  # drafted here and removed: όπλο is what a Greek player calls a sword or a bow,
+  # so the phrase had to name the pistol instead.
+  - id: el.threat.violence
+    term: ξέρω πού μένεισ
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ξερω που μενεισ
+      - ξέρω τη διεύθυνσή σου
+      - ξερω τη διευθυνση σου
+      - βρήκα τη διεύθυνσή σου
+      - βρηκα τη διευθυνση σου
+      - θα έρθω σπίτι σου
+      - θα ερθω σπιτι σου
+      - θα σου χτυπήσω την πόρτα
+      - θα σου χτυπησω την πορτα
+      - θα σκοτώσω την οικογένειά σου
+      - θα σκοτωσω την οικογενεια σου
+      - ξέρω σε ποιο σχολείο πασ
+      - ξερω σε ποιο σχολειο πασ
+      - θα φέρω πιστόλι
+      - θα φερω πιστολι
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `θα σε σκοτώσω` on its
+  # own is not listed anywhere in this pack, for the same reason en.yml does not
+  # list "I'll kill you".
+  - id: el.threat.violence-ambiguous
+    term: θα σε μαχαιρώσω
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - θα σε μαχαιρωσω
+      - θα σε πυροβολήσω
+      - θα σε πυροβολησω
+      - θα σε βρω και θα σε σκοτώσω
+      - θα σε βρω και θα σε σκοτωσω
+      - θα σε σπάσω στο ξύλο
+      - θα σε σπασω στο ξυλο
+    context_required: true
+  # Every variant names the school. `θα ανατινάξω` without an object is what a
+  # player says about TNT.
+  - id: el.threat.mass-violence
+    term: θα κάνω μακελειό στο σχολείο
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - θα κανω μακελειο στο σχολειο
+      - θα ανατινάξω το σχολείο
+      - θα ανατιναξω το σχολειο
+      - θα φέρω πιστόλι στο σχολείο
+      - θα φερω πιστολι στο σχολειο
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: el.threat.mass-violence-ambiguous
+    term: μακελειό στο σχολείο
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - μακελειο στο σχολειο
+    context_required: true
+  - id: el.threat.sexual-violence
+    term: θα σε βιάσω
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - θα σε βιασω
+      - θα βιάσω τη μάνα σου
+      - θα βιασω τη μανα σου
+    context_required: false
+  - id: el.threat.doxxing
+    term: θα ανεβάσω τη διεύθυνσή σου
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - θα ανεβασω τη διευθυνση σου
+      - θα δώσω τη διεύθυνσή σου
+      - θα δωσω τη διευθυνση σου
+      - θα σε ντοξάρω
+      - θα σε ντοξαρω
+      - θα σε ντιντοσάρω
+      - θα σε ντιντοσαρω
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: el.threat.doxxing-ip
+    term: έχω το ip σου
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - εχω το ip σου
+      - ξέρω το ip σου
+      - ξερω το ip σου
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: el.sexual.explicit
+    term: θέλω να σε γαμήσω
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - θελω να σε γαμησω
+      - δείξε μου τα βυζιά σου
+      - δειξε μου τα βυζια σου
+      - δείξε μου το μουνί σου
+      - δειξε μου το μουνι σου
+      - στείλε γυμνέσ φωτογραφίεσ
+      - στειλε γυμνεσ φωτογραφιεσ
+      - στείλε nudes
+      - στειλε nudes
+      - πάρε μου πίπα
+      - παρε μου πιπα
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: el.sexual.grooming
+    term: μην το πεισ στουσ γονείσ σου
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - μην το πεισ στουσ γονεισ σου
+      - μην το πεισ στη μαμά σου
+      - μην το πεισ στη μαμα σου
+      - μην το πεισ σε κανέναν
+      - μην το πεισ σε κανεναν
+      - θα είναι το μυστικό μασ
+      - θα ειναι το μυστικο μασ
+      - να μείνει μεταξύ μασ
+      - να μεινει μεταξυ μασ
+      - βγάλε τα ρούχα σου
+      - βγαλε τα ρουχα σου
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `είσαι γυμνόσ` means "you have no armour on".
+  - id: el.sexual.grooming-signal
+    term: είσαι μόνοσ στο σπίτι
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - εισαι μονοσ στο σπιτι
+      - είσαι μόνη στο σπίτι
+      - εισαι μονη στο σπιτι
+      - είναι οι γονείσ σου σπίτι
+      - ειναι οι γονεισ σου σπιτι
+      - πόσων χρονών είσαι
+      - ποσων χρονων εισαι
+      - στείλε μου φωτογραφία
+      - στειλε μου φωτογραφια
+      - στείλε μου φωτογραφίεσ
+      - στειλε μου φωτογραφιεσ
+      - άνοιξε την κάμερα
+      - ανοιξε την καμερα
+      - είσαι γυμνόσ
+      - εισαι γυμνοσ
+      - είσαι γυμνή
+      - εισαι γυμνη
+      - πρόσθεσέ με στο snap
+      - προσθεσε με στο snap
+    context_required: true

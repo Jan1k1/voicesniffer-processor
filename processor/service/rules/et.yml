@@ -1,0 +1,458 @@
+version: 1
+language: et
+# See en.yml for the pack-wide policy. Three things are specific to Estonian.
+#
+# **Nothing here is fuzzy, on purpose.** Estonian is agglutinative and writes
+# long vowels and long consonants as doubled letters: `üles`, `poo`, `neeger`,
+# `debiil`, `munni`. Doubling is exactly what the fuzzy matcher treats as a
+# free differing run, so a fuzzy Estonian pattern spends its whole budget on the
+# distinction the orthography uses to tell words apart, and `_is_vowel` folds
+# `ä`, `ö`, `ü` and `õ` onto `a`, `o`, `u` and `o` on top of that. Fuzzy would
+# also buy nothing structurally: it compares whole tokens, so `pede` never
+# reaches `pedekas` and `aadressi` never reaches `aadressile`. Every rule here
+# is `exact` and the forms that matter are listed.
+#
+# **The de-accented twin is a different word often enough to matter.** The
+# transcriber drops marks, so every marked term ships its unmarked spelling and
+# `test_consonant_marked_terms_ship_a_de_accented_twin` enforces it. Checked
+# against et_EE.dic (ISO8859-15, 282,173 stems) before shipping: `üksi` (alone)
+# de-accents onto `uksi`, which is the partitive plural of `uks`, a door. That
+# merge is harmless here only because `üksi` appears inside a five-token phrase
+# and never on its own.
+#
+# **Some words are too short or too shared to list bare.** `türa` de-accents to
+# `tura`, which is a hu_HU.dic headword and one mark from Czech `túra`; `sure`
+# (die) is also the English word, and "I'll mine, sure" is a sentence a player
+# says; `tapa` is both the imperative of "kill" and the town of Tapa; `loll`,
+# `perse`, `sitt`, `kurva`, `homo`, `kanal` and `alasti` are all ordinary
+# et_EE.dic headwords, and five of those seven are English, Czech or Hungarian
+# words as well, while `kanal` is what Hungarian and Czech `kanál` become once
+# the marks are dropped. None of them is listed on its own. Where the word is
+# needed it appears inside a phrase, which is what makes the pack survive a
+# mislabelled utterance from another language.
+#
+# Native review still outstanding on the register calls, in particular whether
+# `pede` belongs at review tier and whether `tibla` is heard as hard as it is
+# written here.
+allow:
+  # `tapa end` is also how a player says "die and reset your spawn point". The
+  # phrase is the most valuable harassment term in the pack, so the game reading
+  # is carved out rather than the rule weakened. It alone still flags.
+  - tapa end et respawnida
+  - tapa end ja respawni
+  - tapa ennast et respawnida
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: et.spam.server-ad
+    term: tule minu serverisse
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - tule mu serverisse
+      - liitu minu serveriga
+      - minu serveri ip on
+    context_required: false
+  - id: et.spam.community-ad
+    term: tule minu discordi
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - liitu minu discordiga
+    context_required: true
+  - id: et.spam.free-items
+    term: tasuta teemandid
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - tasuta teemant
+    context_required: true
+  - id: et.spam.self-promo
+    term: telli minu kanal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - telli mu kanal
+      - vaata minu kanalit
+      - vaata mu youtube kanalit
+      - jälgi mind twitchis
+      - jalgi mind twitchis
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # `pederast` stays at mute tier with a known cost attached. The sweep reports
+  # it as an ordinary word in et_EE.dic, sk_SK.dic and american-english, because
+  # five languages borrowed the same Greek compound and it means the same thing
+  # in all of them. It is kept acting anyway: the descriptive reading is clinical
+  # or legal, and neither turns up in Minecraft voice chat, whereas the slur
+  # reading is the main one this rule exists for. If a customer ever reports a
+  # mute on it, this is the line to move to review tier.
+  - id: et.hate.homophobic
+    term: pedekas
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pedekad
+      - pederastid
+      - sitapede
+    context_required: false
+  # `pede` is the everyday clipping and lands somewhere near English "fag" in
+  # register: said constantly by this age group, and a slur when it is aimed.
+  # Review tier for the bare form; the directed rule below carries the action.
+  - id: et.hate.homophobic-ambiguous
+    term: pede
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - peded
+      - pedet
+      # The singular is the same string in Romanian, where it is the ordinary
+      # clinical and legal word and ro.hate.homophobic-ambiguous holds it at
+      # review tier for that reason. Packs merge under `languages: [auto]`, so
+      # this rule was hour-muting Romanian speakers for a word their own pack
+      # deliberately does not act on -- the same shape as `pedra` in sl.yml and
+      # `cigo` in hu.yml. The Estonian plural `pederastid` is not a Romanian
+      # word and keeps the action above.
+      - pederast
+    context_required: true
+  - id: et.hate.homophobic-directed
+    term: sa oled pede
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - oled pede
+      - kuradi pede
+    context_required: false
+  # `mustlane` is the ordinary Estonian word for Roma. Review tier.
+  - id: et.hate.roma
+    term: mustlane
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - mustlased
+      - mustlast
+    context_required: true
+  # `neeger` was the neutral Estonian word within living memory and is still what
+  # an older speaker reaches for. Review tier.
+  - id: et.hate.racial
+    term: neeger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - neegrid
+      - neegrit
+    context_required: true
+  - id: et.hate.racial-directed
+    term: sa oled neeger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - kuradi neeger
+      - sitane neeger
+      - kuradi mustlane
+      - sitane mustlane
+    context_required: false
+  # `tibla` has no neutral reading in Estonian: it is only ever the slur for a
+  # Russian, so it does not need the bare/directed split the others get.
+  - id: et.hate.russophobic
+    term: tibla
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tiblad
+      - tiblat
+      - kuradi tibla
+    context_required: false
+  - id: et.hate.ableist
+    term: debiil
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - debiilik
+      - debiilikud
+      - vaimne invaliid
+    context_required: true
+  - id: et.hate.ableist-directed
+    term: sa oled debiil
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - kuradi debiil
+      - oled debiilik
+    context_required: false
+  # `juut` on its own is the neutral word and is never listed; it only appears
+  # here with something in front of it.
+  - id: et.hate.antisemitic
+    term: hail hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - heil hitler
+      - sitane juut
+      - kuradi juut
+      - kõik juudid gaasikambrisse
+      - koik juudid gaasikambrisse
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: et.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `tapa end` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file. `mine sure` was drafted here and
+  # removed: `sure` is also the English word, so the phrase collides with "I'll
+  # mine, sure" once an English utterance is misrouted to this pack.
+  - id: et.harassment.self-harm
+    term: tapa end
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - tapa ennast
+      - poo end üles
+      - poo end ules
+      - hüppa silla pealt
+      - huppa silla pealt
+      - lõika oma randmed läbi
+      - loika oma randmed labi
+      - joo valgendit
+      # Three ASCII letters, identical in every language, and it was in six
+      # packs out of twenty-three. Deliberately still absent from da, de, nl
+      # and sv: `kys` is the ordinary Danish word for a kiss and those four
+      # servers are the ones likely to have da.yml enabled beside them.
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: et.harassment.death-wish-ambiguous
+    term: mine ja sure
+    category: harassment
+    severity: 2
+    match: exact
+    variants: []
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: et.harassment.self-harm-disclosure
+    term: ma tahan ennast tappa
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - ma tahan surra
+      - ma ei taha enam elada
+      - ma lõikan ennast
+      - ma loikan ennast
+      - kms
+      - keegi ei igatseks mind
+    context_required: true
+  # Directed abuse, five-minute mute. Bare swearing is deliberately absent for
+  # the same reason as in en.yml: `kurat` and `perse` are punctuation in
+  # Estonian voice chat.
+  - id: et.harassment.abuse
+    term: käi perse
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - kai perse
+      - mine perse
+      - keri perse
+      - käi vittu
+      - kai vittu
+      - sitapea
+      - sa oled sitapea
+      - lita poeg
+      - sa oled lits
+    context_required: false
+  - id: et.harassment.insult
+    term: sa oled loll
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - oled loll
+      - sa oled tobe
+      - keegi ei taha sind
+      - keegi ei salli sind
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases naming something the game does not
+  # contain: an address, a home, a school, a family, a pistol.
+  - id: et.threat.violence
+    term: ma tean kus sa elad
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - tean kus sa elad
+      - ma tean su aadressi
+      - leidsin su aadressi
+      - ma tulen sinu koju
+      - ma tapan su pere
+      - toon püstoli
+      - toon pustoli
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `ma tapan su` on its own
+  # is not listed anywhere in this pack, for the same reason en.yml does not list
+  # "I'll kill you".
+  - id: et.threat.violence-ambiguous
+    term: ma pussitan sind
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ma lasen su maha
+      - ma leian su üles ja tapan
+      - ma leian su ules ja tapan
+      - ma peksan su läbi
+      - ma peksan su labi
+    context_required: true
+  # Every variant names the school. `lasen õhku` without an object is what a
+  # player says about TNT.
+  - id: et.threat.mass-violence
+    term: tulistan koolis
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - lasen kooli õhku
+      - lasen kooli ohku
+      - toon relva kooli
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: et.threat.mass-violence-ambiguous
+    term: koolitulistamine
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: et.threat.sexual-violence
+    term: ma vägistan sind
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ma vagistan sind
+      - vägistan su ema
+      - vagistan su ema
+    context_required: false
+  - id: et.threat.doxxing
+    term: postitan su aadressi
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - lekitan su aadressi
+      - doxin sind
+      - ddosin sind
+    context_required: false
+  # In Minecraft an "ip" is the server address every player types to connect, so
+  # an IP claim is review tier for the same reason as in en.yml.
+  - id: et.threat.doxxing-ip
+    term: mul on su ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ma tean su ip aadressi
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: et.sexual.explicit
+    term: ime mu munni
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - ime munni
+      - tahan sind keppida
+      - näita oma tisse
+      - naita oma tisse
+      - saada alasti pilte
+      - saada nudes
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: et.sexual.grooming
+    term: ära räägi oma vanematele
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ara raagi oma vanematele
+      - ära räägi emale
+      - ara raagi emale
+      - ära räägi kellelegi
+      - ara raagi kellelegi
+      - see on meie saladus
+      - võta riided ära
+      - vota riided ara
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `sa oled alasti` means "you have no armour on".
+  - id: et.sexual.grooming-signal
+    term: kas sa oled üksi kodus
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - kas sa oled uksi kodus
+      - oled sa kodus üksi
+      - oled sa kodus uksi
+      - kas vanemad on kodus
+      - kui vana sa oled
+      - saada mulle pilt
+      - saada mulle pilte
+      - pane kaamera sisse
+      - sa oled alasti
+    context_required: true

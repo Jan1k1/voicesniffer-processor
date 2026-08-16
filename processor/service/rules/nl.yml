@@ -1,0 +1,512 @@
+version: 1
+language: nl
+# See en.yml for the pack-wide policy. Five things are specific to Dutch.
+#
+# **No fuzzy rules at all.** Every candidate failed the same way. `nikker` at six
+# characters has a two-run budget, which reaches `nakker` and `nokker`; `flikker`
+# is a live verb stem; `kanker` is the ordinary word for cancer; `mongool` sits
+# one vowel from ordinary vocabulary in three directions. Dutch also loses two of
+# the best-shaped candidates to `test_fuzzy_patterns_have_no_adjacent_distinct_vowels`,
+# because `oe`, `ie`, `eu` and `ij` are everywhere in this language and every one
+# of them is two adjacent distinct vowels. Everything here is `exact`, which
+# costs obfuscation recall and is the right trade.
+#
+# **Disease words are the Dutch insult vocabulary, and they are also just
+# disease words.** `kanker`, `tering`, `tyfus` and `pleuris` are ordinary nouns.
+# Only the compounds and the fixed phrases are listed: `krijg de kanker`,
+# `kankerhoer`, `kanker op`. Bare `kanker` is not in this file and must not be.
+#
+# **`flikker` is a verb.** "flikker die blokken weg" is ordinary Dutch for
+# "chuck those blocks away", and `opflikkeren` is everyday speech, so the bare
+# token is not listed. `flikker op` is listed as directed abuse and `vuile
+# flikker` as a slur, both of which need the second word to be reached. The
+# plural `flikkers` is only ever the noun, so it sits at review tier.
+#
+# **`nikker` is an ordinary word in Danish, where it means "nods".** It is also
+# the Dutch n-word and the single most valuable hate term in this pack, so it
+# stays at severity 3 here. A server running nl.yml and da.yml together, with
+# automatic language detection, can in principle mute a Danish speaker for
+# saying "hij nikker". That is a routing risk rather than a matcher risk and
+# there is nothing this file can do about it; it is written down so the owner can
+# decide, not hidden.
+#
+# **`kys` is not in this pack.** Dutch players use it, but it is the ordinary
+# Danish word for "kiss" and da.yml may be enabled alongside this one.
+#
+# Native review still outstanding: whether `mocro` belongs at review tier or is
+# now fully reclaimed, whether `val dood` reads as a threat or as fall damage to
+# a Dutch player, and whether the `krijg de ...` set should be severity 3 rather
+# than 2.
+allow:
+  # How a player says "die so you respawn at your bed". `dood jezelf` is
+  # reflexive in Dutch and so does not collide with `ik dood je`, but it does
+  # collide with the respawn instruction, which is carved out here rather than by
+  # weakening the rule.
+  - dood jezelf om te respawnen
+  - dood jezelf zodat je respawnt
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: nl.spam.server-ad
+    term: kom op mijn server
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kom naar mijn server
+      - join mijn server
+      - bezoek mijn server
+      - mijn server ip is
+    context_required: false
+  # Review tier: a server that runs its own Discord hears this all day.
+  - id: nl.spam.community-ad
+    term: join mijn discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - kom op mijn discord
+      - kom in mijn discord
+    context_required: true
+  - id: nl.spam.free-items
+    term: gratis diamanten
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis spullen
+    context_required: true
+  # Servers run real giveaways, so staff decide whether the offer is theirs.
+  - id: nl.spam.giveaway-scam
+    term: gratis ranks
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - gratis rank
+      - gratis robux
+      - gratis minecoins
+      - gratis cadeaubon
+      - klik op de link
+      - klik op deze link
+      - klik op mijn link
+    context_required: true
+  - id: nl.spam.self-promo
+    term: abonneer op mijn kanaal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - abonneer je op mijn kanaal
+      - abonneren op mijn kanaal
+      - check mijn youtube
+      - kijk mijn youtube
+      - volg mij op twitch
+      - volg me op twitch
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # See the header on `nikker`. Listed, not fuzzy: at six characters the budget
+  # is two differing runs, which is three edits from ordinary vocabulary.
+  - id: nl.hate.nword
+    term: nikker
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - nikkers
+      - nikkertje
+      - neger
+      - negers
+      - negerin
+      - nigger
+      - nigga
+    context_required: false
+  - id: nl.hate.slur-ethnic
+    term: roetmop
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - roetmoppen
+      - spleetoog
+      - spleetogen
+      - geitenneuker
+      - geitenneukers
+      - kutmarokkaan
+      - kutmarokkanen
+      - kutturk
+      - zandneger
+    context_required: false
+  # `mocro` is used self-referentially by exactly the age group on these servers,
+  # `mietje` is closer to "sissy" than to a slur, and `flikkers` is the plural
+  # noun rather than the verb but is still one word away from ordinary speech.
+  # Staff see these, nobody is muted by one.
+  - id: nl.hate.slur-ambiguous
+    term: mocro
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - mocros
+      - mietje
+      - mietjes
+      - flikkers
+      # Added after the cross-language check: `zigeuner` is a headword in nl.dic
+      # as well as de.dic, and de.yml already holds it at review tier. Leaving it
+      # out of this pack would have meant the same word answered differently
+      # depending on which pack the language detector picked.
+      - zigeuner
+      - zigeuners
+    context_required: true
+  - id: nl.hate.slur-directed
+    term: vuile mocro
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - kankermocro
+      - kutmocro
+      - ga terug naar je eigen land
+      - rot op naar je eigen land
+    context_required: false
+  # `flikker` on its own is a verb, so every pattern here needs its second word.
+  - id: nl.hate.homophobic
+    term: vuile flikker
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - vieze flikker
+      - kankerflikker
+      - tyfusflikker
+      - homoflikker
+      - kankerhomo
+      - vuile homo
+      - je bent een homo
+    context_required: false
+  # Pejorative `homo` is ubiquitous in Dutch voice chat and is also the neutral
+  # word. Review tier: a moderator watching one account repeat it is the useful
+  # output, not a mute.
+  - id: nl.hate.homophobic-casual
+    term: wat homo
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - dat is homo
+      - echt homo
+      - je bent zo homo
+      - doe niet zo homo
+    context_required: true
+  - id: nl.hate.antisemitic
+    term: heil hitler
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sieg heil
+      - joden aan het gas
+      - vuile jood
+      - kankerjood
+      - jodenhoer
+    context_required: false
+  # `achterlijk` and `debiel` are ordinary Dutch adjectives before they are
+  # insults, and `mongool` is still the word for somebody from Mongolia. Review
+  # tier for the bare terms; the directed rule below carries the action.
+  - id: nl.hate.ableist
+    term: mongool
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - mongolen
+      - debiel
+      - debielen
+      - achterlijk
+      - achterlijke
+      - spast
+      - spasten
+      - spasticus
+    context_required: true
+  - id: nl.hate.ableist-directed
+    term: je bent een mongool
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - jij mongool
+      - kankermongool
+      - vuile mongool
+      - tyfusmongool
+      - achterlijke mongool
+      - je bent een debiel
+      - kankerdebiel
+    context_required: false
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: nl.hate.slur-english
+    term: niggers
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # Severity 3. Dutch marks the reflexive with `jezelf`, so unlike German none of
+  # these collides with the transitive "I'll kill you"; the only carve-out needed
+  # is the respawn instruction, which is in `allow:` at the top of the file.
+  - id: nl.harassment.self-harm
+    term: dood jezelf
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - maak jezelf van kant
+      - pleeg zelfmoord
+      - hang jezelf op
+      - ga jezelf ophangen
+      - spring voor de trein
+      - spring voor de metro
+      - snij je polsen door
+      - snijd je polsen door
+      - ga jezelf verzuipen
+    context_required: false
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: nl.harassment.self-harm-disclosure
+    term: ik wil mezelf van kant maken
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - ik maak mezelf van kant
+      - ik wil dood
+      - ik wil niet meer leven
+      - ik snijd mezelf
+      - kms
+      - niemand zou mij missen
+    context_required: true
+  # Directed abuse, five-minute mute. Bare profanity is deliberately absent for
+  # the same reason as in en.yml: in Dutch voice chat it is punctuation.
+  - id: nl.harassment.abuse
+    term: hou je bek
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - hou je kop
+      - kanker op
+      - flikker op
+      - sodemieter op
+      - rot op
+      - krijg de kanker
+      - krijg kanker
+      - krijg de tering
+      - krijg de tyfus
+      - krijg de klere
+      - kankerlijer
+      - tyfuslijer
+      - kankerhoer
+      - tyfushoer
+      - vuile hoer
+      - je moeder is een hoer
+      - ik neuk je moeder
+    context_required: false
+  # Trash talk that is directed but mild. `val dood` is here rather than in the
+  # rule above because a Minecraft player says it about fall damage as often as
+  # at another player.
+  - id: nl.harassment.insult
+    term: je bent dom
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - je bent stom
+      - je bent een loser
+      - je bent waardeloos
+      - je bent nutteloos
+      - je bent zielig
+      - niemand mag je
+      - iedereen haat je
+      - val dood
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a front door, a house, a family, a pistol.
+  - id: nl.threat.violence
+    term: ik weet waar je woont
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ik weet je adres
+      - ik ken je adres
+      - ik heb je adres
+      - ik weet op welke school je zit
+      - ik kom naar je huis
+      - ik sta voor je deur
+      - ik vermoord je familie
+      - ik neem een pistool mee
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. `ik maak je af` is what
+  # every Dutch player says before a duel.
+  - id: nl.threat.violence-ambiguous
+    term: ik steek je neer
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ik schiet je neer
+      - ik sla je verrot
+      - ik sla je in elkaar
+      - ik maak je af
+    context_required: true
+  - id: nl.threat.mass-violence
+    term: ik schiet de school overhoop
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ik neem een pistool mee naar school
+      - ik blaas de school op
+      - ik blaas mijn school op
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: nl.threat.mass-violence-ambiguous
+    term: schietpartij op school
+    category: threat
+    severity: 3
+    match: exact
+    variants: []
+    context_required: true
+  - id: nl.threat.sexual-violence
+    term: ik verkracht je
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ik ga je verkrachten
+      - ik verkracht je moeder
+      - ik verkracht je zusje
+    context_required: false
+  # Armed police at a child's front door. No gameplay reading, so severity 3 and
+  # kept separate from doxxing.
+  - id: nl.threat.swatting
+    term: ik stuur de politie naar je huis
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - ik stuur het arrestatieteam naar je toe
+      - ik laat de politie bij je langsgaan
+      - ik swat je
+    context_required: false
+  - id: nl.threat.doxxing
+    term: ik dox je
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ik doxx je
+      - ik lek je adres
+      - ik post je adres
+      - ik zet je adres online
+      - ik zet je gegevens online
+    context_required: false
+  # In Minecraft an IP is the server address every player types to connect.
+  - id: nl.threat.doxxing-ip
+    term: ik heb je ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - ik ken je ip
+      - ik weet je ip
+      - ik lek je ip
+      - ik ddos je
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: nl.sexual.explicit
+    term: zuig mijn lul
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - zuig mijn pik
+      - pijp me
+      - ik wil je neuken
+      - laat je tieten zien
+      - laat je borsten zien
+      - laat je kut zien
+      - stuur nudes
+      - stuur me nudes
+      - stuur me naaktfotos
+      # The transcriber writes the apostrophe, and normalisation turns it into a
+      # space, so `naaktfoto's` arrives as two tokens.
+      - stuur me naaktfoto s
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these catch the approach rather than the
+  # age: isolation, secrecy, moving off-platform, images.
+  - id: nl.sexual.grooming
+    term: zeg het niet tegen je ouders
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - vertel het niet aan je ouders
+      - zeg het niet tegen je moeder
+      - zeg het tegen niemand
+      - dit blijft ons geheim
+      - dit is ons kleine geheim
+      - ons kleine geheimpje
+      - trek je kleren uit
+      - doe je kleren uit
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: `ben je naakt` means "are you wearing armour" on
+  # any survival server.
+  - id: nl.sexual.grooming-signal
+    term: ben je alleen thuis
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - zijn je ouders thuis
+      - is je moeder thuis
+      - ben je naakt
+      - ben je bloot
+      - hoe oud ben je echt
+      - je bent zo volwassen voor je leeftijd
+      - stuur me een foto
+      - stuur me fotos
+      - stuur me foto s
+      - voeg me toe op snap
+      - voeg me toe op snapchat
+      - zet je camera aan
+      - gaan we videobellen
+    context_required: true

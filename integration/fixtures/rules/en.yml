@@ -1,0 +1,10 @@
+version: 1
+language: en
+rules:
+  - id: en.test.blocked
+    term: blocked phrase
+    category: harassment
+    severity: 2
+    match: exact
+    variants: []
+    context_required: false

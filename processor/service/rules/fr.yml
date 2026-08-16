@@ -1,0 +1,617 @@
+version: 1
+language: fr
+# See en.yml for the pack-wide policy. Four things are specific to French.
+#
+# **Nothing here is fuzzy.** French inflection changes a vowel and produces
+# another real word about as often as it produces nonsense, and the run-structure
+# matcher tolerates exactly a vowel swap. `pede` is one vowel from `pode`,
+# `pide`, `pade` and `pude`, and two of those are ordinary Portuguese and
+# Spanish. There is no term in this pack whose consonant frame is empty of real
+# vocabulary in the way `buzerant` is in Czech, so every rule is `exact` and the
+# pack buys precision by giving up obfuscation tolerance. The transcriber
+# spellings that matter are listed instead.
+#
+# **The apostrophe is gone by the time a rule is asked.** ``normalize_transcript``
+# turns every non-alphanumeric character into a space, so `l'école` arrives as
+# `l ecole` and `t'es` as `t es`. Patterns are written that way here, which looks
+# wrong on the page and is what actually fires.
+#
+# **Accents are dropped by the transcriber**, so every accented pattern ships an
+# unaccented twin. `ç` and `é` both decompose under NFKD, so the twin is the
+# fully unmarked spelling: `abonne toi à ma chaîne` pairs with `abonne toi a ma
+# chaine`. Enforced by ``test_consonant_marked_terms_ship_a_de_accented_twin``.
+#
+# **The other Romance packs can be enabled at the same time, and they collide.**
+# The de-accented twin is what collides, not the French spelling:
+#
+#   `négro` -> `negro`, which is the ordinary word for the colour black in
+#     Spanish, Portuguese and Italian.
+#   `pédé`  -> `pede`, which is ordinary Portuguese for "he asks".
+#   `débile` -> `debile`, which is the Romanian feminine plural of `debil`.
+#
+# All three are in the review tier for that reason, and the directed phrasings
+# built on them (`espèce de pédé`, `espèce de négro`) carry the automatic action
+# instead. A French-only server loses some recall to this; a server running fr
+# and pt together would otherwise mute a Portuguese speaker asking for something.
+#
+# Native review still outstanding: whether `ta gueule` belongs at severity 2 or
+# in the review tier, and whether the mass-violence phrasings read as French
+# rather than as translated English.
+allow:
+  # `tue toi` is also how a player says "die and respawn". The phrase is the most
+  # valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `tue toi` alone still flags.
+  - tue toi pour respawn
+  - tue toi et respawn
+  - tue toi pour réapparaître
+  - tue toi pour reapparaitre
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: fr.spam.server-ad
+    term: rejoins mon serveur
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - rejoignez mon serveur
+      - viens sur mon serveur
+      - venez sur mon serveur
+      - mon ip est
+      - voici mon ip
+    context_required: false
+  # Review tier: "rejoins mon discord pour le raid" is ordinary talk on a server
+  # that runs its own Discord.
+  - id: fr.spam.community-ad
+    term: rejoins mon discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - rejoignez mon discord
+      - viens sur mon discord
+    context_required: true
+  - id: fr.spam.free-items
+    term: diamants gratuits
+    category: spam
+    severity: 1
+    match: exact
+    variants: []
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: fr.spam.giveaway-scam
+    term: grades gratuits
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - rangs gratuits
+      - robux gratuits
+      - v bucks gratuits
+      - cartes cadeaux gratuites
+      - clique sur le lien
+      - clique sur mon lien
+      - clique mon lien
+    context_required: true
+  - id: fr.spam.self-promo
+    term: abonne toi à ma chaîne
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - abonne toi a ma chaine
+      - abonnez vous à ma chaîne
+      - abonnez vous a ma chaine
+      - regarde ma chaîne
+      - regarde ma chaine
+      - va voir ma chaîne
+      - va voir ma chaine
+      - regarde mon youtube
+      - suis moi sur twitch
+      - lâche un abonnement
+      - lache un abonnement
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  # The homophobic slurs with no ordinary reading in any of the five Romance
+  # packs. `pédé` itself is not here; see the review-tier rule below.
+  - id: fr.hate.homophobic
+    term: tarlouze
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - tarlouzes
+      - tantouze
+      - tantouzes
+      - fiotte
+      - fiottes
+      - travelo
+      - travelos
+      - gouine
+      - gouines
+      - sale pédé
+      - sale pede
+      - gros pédé
+      - gros pede
+      - espèce de pédé
+      - espece de pede
+      - bande de pédés
+      - bande de pedes
+    context_required: false
+  # `pédé` de-accents to `pede`, and `pede` is ordinary Portuguese: "il demande".
+  # A server running fr and pt together, or a Portuguese utterance the detector
+  # labelled French, reaches this rule. Review tier for the bare token; the
+  # directed forms above carry the action. `tapette` is a flyswatter.
+  - id: fr.hate.homophobic-ambiguous
+    term: pédé
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - pede
+      - pédés
+      - pedes
+      - tapette
+      - tapettes
+    context_required: true
+  - id: fr.hate.slur-racial
+    term: bougnoule
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - bougnoules
+      - chinetoque
+      - chinetoques
+      - niakoué
+      - niakoue
+      - sale arabe
+      - sale noir
+      - sale nègre
+      - sale negre
+      - espèce de négro
+      - espece de negro
+    context_required: false
+  # `négro` de-accents to `negro`, which is simply "black" in Spanish,
+  # Portuguese and Italian, so the bare token cannot carry a mute. `bicot` is
+  # also a young goat and `gitan` is the word many speakers use with no malice.
+  - id: fr.hate.slur-ambiguous
+    term: négro
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - negro
+      - négros
+      - negros
+      - bamboula
+      - bamboulas
+      - bicot
+      - bicots
+      - gitan
+      - gitans
+      - romanichel
+      - romanichels
+    context_required: true
+  - id: fr.hate.antisemitic
+    term: sale juif
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - sale juive
+      - sales juifs
+      - youpin
+      - youpins
+      - mort aux juifs
+      - heil hitler
+      - sieg heil
+      - chambre à gaz pour les juifs
+      - chambre a gaz pour les juifs
+    context_required: false
+  - id: fr.hate.xenophobic
+    term: retourne dans ton pays
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - rentre dans ton pays
+      - retournez dans votre pays
+      - dehors les étrangers
+      - dehors les etrangers
+    context_required: false
+  # `mongol` is a nationality, `débile` is the ordinary adjective for "feeble"
+  # and survives in medical register, and `attardé` is also "belated". All three
+  # have a reachable benign reading, so the bare tokens are review tier and the
+  # directed rule below carries the action.
+  - id: fr.hate.ableist
+    term: mongol
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - mongols
+      - mongolien
+      - mongoliens
+      - débile
+      - debile
+      - débiles
+      - debiles
+      - attardé
+      - attarde
+      - attardés
+      - attardes
+    context_required: true
+  - id: fr.hate.ableist-directed
+    term: espèce de mongol
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - espece de mongol
+      - sale mongol
+      - t es un mongol
+      - tu es un mongol
+      - espèce de débile
+      - espece de debile
+      - espèce d attardé
+      - espece d attarde
+      - putain de débile
+      - putain de debile
+      - gros débile
+      - gros debile
+      - débile mental
+      - debile mental
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: fr.hate.homophobic-casual
+    term: c est gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - c est trop gay
+      - t es gay
+      - tu es gay
+      - trop gay
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: fr.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `tue toi` stays at severity 3; the respawn reading is carved out by the
+  # allow entries at the top of this file rather than by weakening the rule.
+  - id: fr.harassment.self-harm
+    term: tue toi
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - va te tuer
+      - va te suicider
+      - suicide toi
+      - pends toi
+      - va te pendre
+      - ouvre toi les veines
+      - coupe toi les veines
+      - bois de la javel
+      - j espère que tu vas mourir
+      - j espere que tu vas mourir
+      - j espère que tu meures
+      - j espere que tu meures
+      - kys
+    context_required: false
+  # `crève` and `va crever` are what a French player says when a creeper takes
+  # their base. Review tier: the same sentiment as the rule above without the
+  # phrasing that makes it unambiguous.
+  - id: fr.harassment.death-wish-ambiguous
+    term: crève
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - creve
+      - va crever
+      - va mourir
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: fr.harassment.self-harm-disclosure
+    term: je veux me tuer
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - je veux mourir
+      - je vais me suicider
+      - j ai envie de mourir
+      - je veux plus vivre
+      - je me coupe
+      - kms
+      - personne ne me regretterait
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because in French voice chat it is punctuation.
+  - id: fr.harassment.abuse
+    term: ferme ta gueule
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - ta gueule
+      - ferme ta putain de gueule
+      - va te faire foutre
+      - va te faire enculer
+      - va te faire mettre
+      - nique ta mère
+      - nique ta mere
+      - nique ta race
+      - fils de pute
+      - fils de chien
+      - enculé
+      - encule
+      - enculés
+      - encules
+      - connard
+      - connards
+      - connasse
+      - salope
+      - sale pute
+      - sac à merde
+      - sac a merde
+      - t es qu une merde
+    context_required: false
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: fr.harassment.insult
+    term: t es nul
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - tu es nul
+      - t es nulle
+      - tu es nulle
+      - t es naze
+      - t es qu un raté
+      - t es qu un rate
+      - personne ne t aime
+      - personne t aime
+      - tout le monde te déteste
+      - tout le monde te deteste
+      - t es un déchet
+      - t es un dechet
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: fr.threat.violence
+    term: je sais où tu habites
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - je sais ou tu habites
+      - je sais où tu vis
+      - je sais ou tu vis
+      - je connais ton adresse
+      - j ai ton adresse
+      - j ai trouvé ton adresse
+      - j ai trouve ton adresse
+      - je connais ton école
+      - je connais ton ecole
+      - je sais dans quelle école tu es
+      - je sais dans quelle ecole tu es
+      - je viens chez toi
+      - je vais venir chez toi
+      - je vais tuer ta famille
+      - j amène un flingue
+      - j amene un flingue
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. "je vais te planter"
+  # is what you say before a sword fight. Review tier keeps the signal for staff
+  # without muting a player for describing combat.
+  - id: fr.threat.violence-ambiguous
+    term: je vais te tuer
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - je vais te buter
+      - je vais te planter
+      - je vais te défoncer
+      - je vais te defoncer
+      - je vais te frapper
+      - je vais te casser la gueule
+      - je vais te tirer dessus
+      - je te retrouverai et je te tuerai
+    context_required: true
+  # Every variant names the school. An objectless "je vais tirer" fires on a
+  # player describing a bow, which is the mistake en.yml made with "shoot up".
+  - id: fr.threat.mass-violence
+    term: fusillade dans mon école
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - fusillade dans mon ecole
+      - fusillade au lycée
+      - fusillade au lycee
+      - je vais faire sauter l école
+      - je vais faire sauter l ecole
+      - mettre une bombe dans l école
+      - mettre une bombe dans l ecole
+      - je vais tirer sur tout le monde au lycée
+      - je vais tirer sur tout le monde au lycee
+      - je vais tuer tout le monde à l école
+      - je vais tuer tout le monde a l ecole
+      - amener une arme au collège
+      - amener une arme au college
+    context_required: false
+  - id: fr.threat.sexual-violence
+    term: je vais te violer
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - je te viole
+      - on va te violer
+      - je vais violer ta mère
+      - je vais violer ta mere
+    context_required: false
+  # Police at a child's front door. There is no gameplay reading of this.
+  - id: fr.threat.swatting
+    term: j envoie la police chez toi
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - j appelle la police chez toi
+      - j envoie les flics chez toi
+      - j envoie le gign chez toi
+      - je vais te swatter
+      - je vais te swat
+    context_required: false
+  - id: fr.threat.doxxing
+    term: je vais te doxx
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - je vais te dox
+      - je vais te doxxer
+      - je vais te doxer
+      - je balance ton adresse
+      - je poste ton adresse
+      - je publie ton adresse
+      - je leak ton adresse
+      - je vais leak ton adresse
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "j'ai ton IP pour le serveur" is a helpful sentence. Review tier.
+  - id: fr.threat.doxxing-ip
+    term: j ai ton ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - je connais ton ip
+      - je leak ton ip
+      - je vais leak ton ip
+      - je vais te ddos
+      - je vais te ddoser
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: fr.sexual.explicit
+    term: suce ma bite
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - suce moi la bite
+      - suce ma queue
+      - lèche moi le cul
+      - leche moi le cul
+      - je veux te baiser
+      - je veux te niquer
+      - montre moi tes seins
+      - montre moi tes nichons
+      - montre moi ton cul
+      - montre moi ta chatte
+      - envoie des nudes
+      - envoie moi des nudes
+      - envoie moi une photo nue
+      - envoie moi des photos nues
+      - branle moi
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: fr.sexual.grooming
+    term: ne le dis pas à tes parents
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - ne le dis pas a tes parents
+      - le dis pas à tes parents
+      - le dis pas a tes parents
+      - ne dis rien à tes parents
+      - ne dis rien a tes parents
+      - ne le dis à personne
+      - ne le dis a personne
+      - le dis à personne
+      - le dis a personne
+      - c est notre petit secret
+      - c est notre secret
+      - ça reste entre nous
+      - ca reste entre nous
+      - enlève tes vêtements
+      - enleve tes vetements
+      - déshabille toi
+      - deshabille toi
+      - enlève ton pantalon
+      - enleve ton pantalon
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: "tu es nu" means "you have no armour on".
+  - id: fr.sexual.grooming-signal
+    term: tu es seul chez toi
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - t es seul chez toi
+      - tu es seule chez toi
+      - t es seule chez toi
+      - tes parents sont là
+      - tes parents sont la
+      - ta mère est là
+      - ta mere est la
+      - tu es tout seul
+      - t es tout seul
+      - tu es nu
+      - t es nu
+      - tu es nue
+      - t es nue
+      - quel âge tu as vraiment
+      - quel age tu as vraiment
+      - envoie moi une photo
+      - envoie moi des photos
+      - envoie moi une photo de toi
+      - ajoute moi sur snap
+      - ajoute moi sur snapchat
+      - allume ta caméra
+      - allume ta camera
+      - on fait un appel vidéo
+      - on fait un appel video
+    context_required: true

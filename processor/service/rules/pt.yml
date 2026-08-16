@@ -1,0 +1,584 @@
+version: 1
+language: pt
+# See en.yml for the pack-wide policy. Five things are specific to Portuguese.
+#
+# **Nothing here is fuzzy.** Portuguese marks gender and number on the final
+# vowel and nasalises with a tilde, so one changed vowel is routinely a
+# different real word: `puto`/`puta`/`pato`, `viado`/`veado`. The run-structure
+# matcher tolerates exactly a vowel swap, which is the one edit Portuguese
+# morphology hands out for free. Every rule is `exact`.
+#
+# **The Portuguese dictionary is the weakest gate of the five.** `pt_PT.dic` has
+# 44k stems against 84k for French and 181k for Romanian, so the sweep clears a
+# pattern here on less evidence than it does anywhere else. This pack is
+# correspondingly more conservative: where a term was arguable it went to the
+# review tier rather than being kept at mute tier on the strength of a clean
+# sweep.
+#
+# **Accents are dropped by the transcriber**, so every accented pattern ships an
+# unaccented twin, and the tilde and cedilha decompose too: `vai à merda` pairs
+# with `vai a merda`, `câmara` with `camara`, `endereço` with `endereco`.
+# Enforced by ``test_consonant_marked_terms_ship_a_de_accented_twin``.
+#
+# **`és` de-accents to `es`, which is the Spanish third person of `ser`.** So
+# `és burro` becomes `es burro`, and a Spanish speaker saying "he is stupid"
+# reaches this pack. Every second-person pattern here is written with the
+# pronoun (`tu és burro`) for that reason, which is not how a Portuguese speaker
+# writes it but is what keeps the Spanish pack's vocabulary out.
+#
+# **`puto` is a kid in European Portuguese and the f-slur in Mexican Spanish.**
+# It is not listed here at all. Going the other way, `bicha` is a queue and a
+# worm, `veado` is a deer, and `crioulo` is the ordinary word for a creole
+# language; all three are review tier.
+#
+# Native review still outstanding: the pt-PT and pt-BR split. `mata-te` and
+# `morada` are European, `se mata` and `endereço` are Brazilian, and both are in
+# here. A native speaker should say which of these read as foreign.
+allow:
+  # `mata te` is also how a player says "die and respawn". The phrase is the most
+  # valuable harassment term in the pack, so the game reading is carved out
+  # rather than the rule weakened. `mata te` alone still flags.
+  - mata te para renascer
+  - mata te e renasce
+  - mata te para respawnar
+  - vai se matar para respawnar
+rules:
+  # ---------------------------------------------------------------- spam ---
+  - id: pt.spam.server-ad
+    term: entra no meu servidor
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - entrem no meu servidor
+      - vem para o meu servidor
+      - vem pro meu servidor
+      - o meu ip é
+      - o meu ip e
+    context_required: false
+  # Review tier: "entra no meu discord para o raid" is ordinary talk on a server
+  # that runs its own Discord.
+  - id: pt.spam.community-ad
+    term: entra no meu discord
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - vem para o meu discord
+    context_required: true
+  - id: pt.spam.free-items
+    term: diamantes grátis
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - diamantes gratis
+    context_required: true
+  # Servers run real giveaways, so this is review tier: staff see the claim and
+  # decide whether it is theirs.
+  - id: pt.spam.giveaway-scam
+    term: ranks grátis
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - ranks gratis
+      - robux grátis
+      - robux gratis
+      - vbucks grátis
+      - vbucks gratis
+      - clica no link
+      - clica no meu link
+      - carrega no link
+    context_required: true
+  - id: pt.spam.self-promo
+    term: subscreve o meu canal
+    category: spam
+    severity: 1
+    match: exact
+    variants:
+      - inscreve te no meu canal
+      - se inscreve no meu canal
+      - vê o meu canal
+      - ve o meu canal
+      - vê o meu youtube
+      - ve o meu youtube
+      - segue me no twitch
+      - deixa like e subscreve
+    context_required: false
+  # ---------------------------------------------------------------- hate ---
+  - id: pt.hate.homophobic
+    term: paneleiro
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - paneleiros
+      - paneleiro de merda
+      - sapatão
+      - sapatao
+      - sapatões
+      - sapatoes
+      - viado de merda
+      - bicha de merda
+      - panasca
+    context_required: false
+  # `bicha` is a queue in European Portuguese and also a worm; `veado` is a deer
+  # and `viado` is only a spelling of it, which is what a transcriber will write
+  # either way; `maricas` is shared with the Spanish pack. Review tier; the
+  # directed forms above carry the action.
+  - id: pt.hate.homophobic-ambiguous
+    term: bicha
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - bichas
+      - viado
+      - viados
+      - veado
+      - veados
+      - maricas
+    context_required: true
+  - id: pt.hate.slur-racial
+    term: preto de merda
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - preta de merda
+      - preto do caralho
+      - macaco de merda
+      - macacos de merda
+      - volta para a tua terra
+      - volta pra tua terra
+    context_required: false
+  # `cigano` is the word many speakers still use for Roma without malice,
+  # `crioulo` is the ordinary word for a creole language, and `macaco` is a
+  # monkey and a car jack. Review tier; the directed forms above carry the
+  # action.
+  - id: pt.hate.slur-ambiguous
+    term: cigano
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - ciganos
+      - cigana
+      - crioulo
+      - crioulos
+      - macaco
+      - macacos
+    context_required: true
+  - id: pt.hate.antisemitic
+    term: judeu de merda
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - porco judeu
+      - porcos judeus
+      - morte aos judeus
+      - gás para os judeus
+      - gas para os judeus
+      - heil hitler
+      - sieg heil
+    context_required: false
+  - id: pt.hate.xenophobic
+    term: volta para o teu país
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - volta para o teu pais
+      - vai para o teu país
+      - vai para o teu pais
+      - fora os imigrantes
+    context_required: false
+  # `retardado` is the ordinary participle for "delayed" and `deficiente` is
+  # still the neutral administrative word for a disabled person, so both fire on
+  # ordinary speech. `mongoloide` names a nationality. Review tier; the directed
+  # rule below carries the action.
+  - id: pt.hate.ableist
+    term: retardado
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - retardados
+      - retardada
+      - mongoloide
+      - mongoloides
+      - deficiente
+      - deficientes
+    context_required: true
+  - id: pt.hate.ableist-directed
+    term: tu és um retardado
+    category: hate
+    severity: 2
+    match: exact
+    variants:
+      - tu es um retardado
+      - seu retardado
+      - retardado mental
+      - atrasado mental
+      - tu és um mongoloide
+      - tu es um mongoloide
+      - seu mongoloide
+      - deficiente mental de merda
+    context_required: false
+  # Pejorative "gay" is ubiquitous and ambiguous in this register. Review tier:
+  # a moderator watching a pattern build up is the useful output, not a mute.
+  - id: pt.hate.homophobic-casual
+    term: tu és gay
+    category: hate
+    severity: 1
+    match: exact
+    variants:
+      - tu es gay
+      - que gay
+      - isso é gay
+      - isso e gay
+      - muito gay
+    context_required: true
+  # The English slurs, which every European gaming community uses whatever
+  # language it plays in. They were in five packs out of twenty-three, so a
+  # server that enabled only its own language caught none of them.
+  #
+  # `exact`, never fuzzy, for the reason en.yml's header gives at length: at the
+  # budget a six-letter frame tolerates, `niggas` accepts **nagas**, a Twilight
+  # Forest boss, and `niggar` accepts **Nagar**. Obfuscation tolerance for these
+  # two frames exists in en.yml alone, where the ordinary words it reaches are
+  # allow-listed one by one.
+  - id: pt.hate.slur-english
+    term: nigger
+    category: hate
+    severity: 3
+    match: exact
+    variants:
+      - niggers
+      - nigga
+      - niggas
+      - faggot
+      - faggots
+    context_required: false
+  # --------------------------------------------------------- harassment ---
+  # `mata te` stays at severity 3; the respawn reading is carved out by the allow
+  # entries at the top of this file rather than by weakening the rule. Bare
+  # `se mata` is deliberately absent: it is also the Spanish third person, "he
+  # kills himself", which fires on "o creeper se mata sozinho" in the es pack's
+  # vocabulary.
+  - id: pt.harassment.self-harm
+    term: mata te
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - vai se matar
+      - suicida te
+      - vai te suicidar
+      - enforca te
+      - atira te de uma ponte
+      - corta os pulsos
+      - bebe lixívia
+      - bebe lixivia
+      - kys
+    context_required: false
+  # Wishing death on a player, with no method named and nothing outside the game
+  # referred to. en.yml's own header says a bare combat verb is not a
+  # moderatable signal here, and these broke it: `go and die already i need that
+  # loot` and `i hope you die in the lava` were hour-long mutes. Review tier at
+  # severity 2, following fr.harassment.death-wish-ambiguous, which is the rule
+  # this one is copied from.
+  - id: pt.harassment.death-wish-ambiguous
+    term: espero que morras
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - espero que você morra
+      - espero que voce morra
+    context_required: true
+  # Self-harm *disclosure*: what a player says about themselves, as opposed to
+  # the rule above, which is what one player tells another to do. Every self-harm
+  # rule in all twenty-three packs was second person, so `i want to kill myself`
+  # and `kms` reached nothing at all -- the single most valuable thing this
+  # product could surface for a server full of teenagers was the one thing it
+  # could not see.
+  #
+  # `context_required: true` is not a hedge here, it is the point. Minecraft has
+  # a literal reading of killing yourself and of wanting to die, and the useful
+  # output is a moderator reading the transcript and checking on the player. A
+  # mute is the wrong answer to this in every case, including the true ones.
+  - id: pt.harassment.self-harm-disclosure
+    term: quero me matar
+    category: harassment
+    severity: 3
+    match: exact
+    variants:
+      - quero matar me
+      - vou me matar
+      - quero morrer
+      - já não quero viver
+      - ja nao quero viver
+      - corto me
+      - kms
+      - ninguém sentiria a minha falta
+      - ninguem sentiria a minha falta
+    context_required: true
+  # Directed abuse, five-minute mute. Not a profanity filter: bare swearing is
+  # left alone on purpose, because in Portuguese voice chat it is punctuation.
+  - id: pt.harassment.abuse
+    term: vai à merda
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - vai a merda
+      - vai para o caralho
+      - vai pro caralho
+      - vai tomar no cu
+      - vai levar no cu
+      - filho da puta
+      - filha da puta
+      - filho da mãe
+      - filho da mae
+      - cala a boca caralho
+      - cala essa boca caralho
+      - seu merda
+      - pedaço de merda
+      - pedaco de merda
+    context_required: false
+  # `cabrão` is a male goat and `corno` a cuckold, both of which friends call
+  # each other; `otário` and `palhaço` are Brazilian banter and `parvo` is closer
+  # to "daft" than to abuse. These report to staff instead of muting.
+  - id: pt.harassment.abuse-ambiguous
+    term: cabrão
+    category: harassment
+    severity: 2
+    match: exact
+    variants:
+      - cabrao
+      - cabrões
+      - cabroes
+      - corno
+      - cornos
+      - otário
+      - otario
+      - palhaço
+      - palhaco
+      - parvo
+    context_required: true
+  # Trash talk that is directed but mild. Review tier: worth a moderator seeing
+  # a repeat offender, not worth a mute the first time.
+  - id: pt.harassment.insult
+    term: não prestas
+    category: harassment
+    severity: 1
+    match: exact
+    variants:
+      - nao prestas
+      - tu és um falhado
+      - tu es um falhado
+      - tu és burro
+      - tu es burro
+      - tu és estúpido
+      - tu es estupido
+      - ninguém gosta de ti
+      - ninguem gosta de ti
+      - toda a gente te odeia
+    context_required: true
+  # -------------------------------------------------------------- threat ---
+  # Automatic severity 3 only for phrases that name something the game does not
+  # contain: an address, a home, a school, a family. Everything a player could
+  # plausibly say about PvP is in the review-tier rule below it.
+  - id: pt.threat.violence
+    term: sei onde moras
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - sei onde tu moras
+      - sei onde vives
+      - sei a tua morada
+      - tenho a tua morada
+      - sei o teu endereço
+      - sei o teu endereco
+      - tenho o teu endereço
+      - tenho o teu endereco
+      - vou à tua casa
+      - vou a tua casa
+      - sei em que escola andas
+      - sei a tua escola
+      - vou matar a tua família
+      - vou matar a tua familia
+      - levo uma pistola
+    context_required: false
+  # Ordinary PvP speech in a game about swords and bows. Review tier keeps the
+  # signal for staff without muting a player for describing combat.
+  - id: pt.threat.violence-ambiguous
+    term: vou te matar
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vou matar te
+      - vou te esfaquear
+      - vou te dar um tiro
+      - vou partir te a cara
+      - vou te encontrar e matar
+    context_required: true
+  # Every variant names the school. An objectless "vou dar tiros" fires on a
+  # player describing a bow, which is the mistake en.yml made with "shoot up".
+  - id: pt.threat.mass-violence
+    term: vou dar tiros na escola
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vou matar toda a gente na escola
+      - vou pôr uma bomba na escola
+      - vou por uma bomba na escola
+      - vou explodir a escola
+      - levar uma arma para a escola
+    context_required: false
+  # The bare topic noun, on its own. `did you see that school shooting on the
+  # news` was an hour-long mute in nineteen of these packs, and a child talking
+  # about something that happened near them is the case where a moderator most
+  # needs to read the transcript and the product least wants to punish. fr.yml
+  # and de.yml never had the problem: they scope every phrasing with a
+  # possessive or a first person. The scoped phrasings above still act; this is
+  # the same noun with nobody named, and it only alerts.
+  - id: pt.threat.mass-violence-ambiguous
+    term: tiroteio na escola
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - tiroteio no colégio
+      - tiroteio no colegio
+    context_required: true
+  - id: pt.threat.sexual-violence
+    term: vou te violar
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vou violar te
+      - violo te
+      - vou violar a tua mãe
+      - vou violar a tua mae
+    context_required: false
+  # Police at a child's front door. There is no gameplay reading of this.
+  - id: pt.threat.swatting
+    term: vou chamar a polícia a tua casa
+    category: threat
+    severity: 3
+    match: exact
+    variants:
+      - vou chamar a policia a tua casa
+      - vou mandar a polícia a tua casa
+      - vou mandar a policia a tua casa
+      - mando a bófia a tua casa
+      - mando a bofia a tua casa
+    context_required: false
+  - id: pt.threat.doxxing
+    term: vou publicar a tua morada
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - vou divulgar a tua morada
+      - vou dar a tua morada a toda a gente
+      - vou espalhar o teu endereço
+      - vou espalhar o teu endereco
+      - vou te doxar
+      - vou doxar te
+    context_required: false
+  # In Minecraft an "IP" is the server address every player types to connect, so
+  # "tenho o teu IP do servidor" is a helpful sentence. Review tier.
+  - id: pt.threat.doxxing-ip
+    term: tenho o teu ip
+    category: threat
+    severity: 2
+    match: exact
+    variants:
+      - sei o teu ip
+      - vou divulgar o teu ip
+      - vou te ddosar
+      - vou ddosar te
+    context_required: true
+  # -------------------------------------------------------------- sexual ---
+  - id: pt.sexual.explicit
+    term: chupa me a pila
+    category: sexual
+    severity: 2
+    match: exact
+    variants:
+      - chupa me o caralho
+      - lambe me o cu
+      - quero foder te
+      - quero te foder
+      - mostra me as mamas
+      - mostra me as tetas
+      - mostra me o cu
+      - mostra me a cona
+      - manda nudes
+      - manda me nudes
+      - manda me uma foto nua
+      - manda me fotos nuas
+    context_required: false
+  # The highest-value rules in this pack for a Minecraft audience. Age is not
+  # something the product can know, so these are phrased to catch the approach
+  # rather than the age: isolation, secrecy, moving off-platform, images.
+  - id: pt.sexual.grooming
+    term: não digas aos teus pais
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - nao digas aos teus pais
+      - não contes aos teus pais
+      - nao contes aos teus pais
+      - não digas à tua mãe
+      - nao digas a tua mae
+      - não digas a ninguém
+      - nao digas a ninguem
+      - não contes a ninguém
+      - nao contes a ninguem
+      - fica entre nós
+      - fica entre nos
+      - é o nosso segredo
+      - e o nosso segredo
+      - é o nosso segredinho
+      - e o nosso segredinho
+      - tira a roupa
+      - despe te
+    context_required: false
+  # The same approach where it is still ambiguous, plus the phrase a Minecraft
+  # player uses about armour: "estás nu" means "you have no armour on".
+  - id: pt.sexual.grooming-signal
+    term: estás sozinho em casa
+    category: sexual
+    severity: 3
+    match: exact
+    variants:
+      - estas sozinho em casa
+      - estás sozinha em casa
+      - estas sozinha em casa
+      - os teus pais estão em casa
+      - os teus pais estao em casa
+      - a tua mãe está em casa
+      - a tua mae esta em casa
+      - estás nu
+      - estas nu
+      - estás nua
+      - estas nua
+      - que idade tens mesmo
+      - manda me uma foto
+      - manda me fotos
+      - adiciona me no snap
+      - liga a câmara
+      - liga a camara
+      - vamos fazer videochamada
+    context_required: true
