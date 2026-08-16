@@ -31,10 +31,35 @@ _FAMILY_FILES = {
 # NeMo's unified vocabulary -- 183 tags including Afar and Abkhaz -- and reflects
 # the tokenizer, not the training set. Reading it as evidence of Turkish support
 # is the obvious mistake to make here.
-_LANGUAGES = frozenset({
-    "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu",
-    "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk",
-})
+_LANGUAGES = frozenset(
+    {
+        "bg",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sk",
+        "sl",
+        "sv",
+        "uk",
+    }
+)
 # 1: archive-only. 2: adds the base_url + downloads form, which pins every file
 # individually. Both shapes load under either number; the bump exists so an old
 # reader fails loudly on a registry it cannot fully verify.
@@ -331,7 +356,7 @@ def _parse_model(raw_model: Any) -> ModelSpec:
         isinstance(role, str) and isinstance(value, str) for role, value in files.items()
     ):
         raise ValueError("files must be a string table")
-    string_fields = (present - {"languages", "files", "downloads"})
+    string_fields = present - {"languages", "files", "downloads"}
     if not all(isinstance(raw_model[field], str) for field in string_fields):
         raise ValueError("model fields must use the registry schema types")
     return ModelSpec(
@@ -361,7 +386,7 @@ def _parse_downloads(raw_downloads: Any) -> tuple[tuple[str, str], ...]:
             or set(entry) != {"path", "sha256"}
             or not all(isinstance(value, str) for value in entry.values())
         ):
-            raise ValueError("each download must be { path = \"...\", sha256 = \"...\" }")
+            raise ValueError('each download must be { path = "...", sha256 = "..." }')
         parsed.append((entry["path"], entry["sha256"]))
     return tuple(parsed)
 

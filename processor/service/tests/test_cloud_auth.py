@@ -392,9 +392,7 @@ def test_entitlements_come_across_intact() -> None:
     assert credential.plan == "cloud-pro"
     assert credential.languages == frozenset({"en", "cs"})
     assert credential.rate_limit_per_minute == 1_200
-    assert credential.expires_at == datetime.datetime(
-        2027, 1, 1, tzinfo=datetime.UTC
-    )
+    assert credential.expires_at == datetime.datetime(2027, 1, 1, tzinfo=datetime.UTC)
 
 
 def test_the_tenant_key_comes_across_so_usage_can_be_attributed() -> None:
@@ -444,9 +442,7 @@ def test_a_self_hosted_credential_has_no_tenant_key(tmp_path) -> None:
 def test_an_empty_language_list_means_every_pack_not_no_packs() -> None:
     # `None` is "all languages" everywhere else in this codebase, and an empty
     # list arriving from the API must not silently mean "moderate nothing".
-    credential = _credential_from(
-        {"active": True, "server_id": "srv-1", "languages": []}, "tok"
-    )
+    credential = _credential_from({"active": True, "server_id": "srv-1", "languages": []}, "tok")
 
     assert credential is not None
     assert credential.languages is None

@@ -105,9 +105,9 @@ def test_long_text_is_truncated_before_it_reaches_the_wire() -> None:
     long, because tripping it there costs a whole batch of other customers'
     events.
     """
-    entry = reporter().payload([
-        event(transcript="a" * 5_000, matched_text="b" * 5_000)
-    ])["events"][0]
+    entry = reporter().payload([event(transcript="a" * 5_000, matched_text="b" * 5_000)])["events"][
+        0
+    ]
 
     assert len(entry["transcript"]) == MAX_TRANSCRIPT_CHARS
     assert len(entry["matched_text"]) == MAX_MATCHED_TEXT_CHARS
@@ -124,15 +124,18 @@ def test_nothing_is_built_for_an_utterance_that_matched_no_rule() -> None:
     that can produce one of these, not a check somebody could forget to copy
     into a second caller.
     """
-    assert flagged_event_from(
-        tenant_key="vst_9f3",
-        server_id="survival-1",
-        request_id="r",
-        player_uuid="9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-        occurred_at=AT,
-        transcript="an entirely unremarkable sentence",
-        matches=[],
-    ) is None
+    assert (
+        flagged_event_from(
+            tenant_key="vst_9f3",
+            server_id="survival-1",
+            request_id="r",
+            player_uuid="9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            occurred_at=AT,
+            transcript="an entirely unremarkable sentence",
+            matches=[],
+        )
+        is None
+    )
 
 
 def test_the_match_named_is_the_one_that_set_the_severity() -> None:
@@ -286,6 +289,7 @@ def test_an_explicit_events_url_overrides_the_derived_one(tmp_path: Path) -> Non
 
 
 # ------------------------------------------------------- the log
+
 
 def test_no_transcript_reaches_any_log_at_any_level(
     tmp_path: Path,

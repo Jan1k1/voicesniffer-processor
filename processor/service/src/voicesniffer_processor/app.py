@@ -945,9 +945,9 @@ class _ServerUsage:
 
     def snapshot(self) -> dict[str, object]:
         return {
-            "since": datetime.datetime.fromtimestamp(
-                self.started_at, tz=datetime.UTC
-            ).isoformat(timespec="seconds"),
+            "since": datetime.datetime.fromtimestamp(self.started_at, tz=datetime.UTC).isoformat(
+                timespec="seconds"
+            ),
             "requests": self.requests,
             "flagged": self.flagged,
             "outcomes": dict(sorted(self.outcomes.items())),

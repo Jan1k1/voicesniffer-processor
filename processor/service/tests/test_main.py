@@ -353,7 +353,7 @@ def test_micro_batching_needs_a_transcriber_that_can_batch(tmp_path: Path) -> No
     with pytest.raises(ValueError, match="requires a batching transcriber"):
         build_application(
             _environment(runtime, VOICESNIFFER_MAX_BATCH_SIZE="4"),
-            adapter_loader=lambda *_args, **_kwargs: (lambda samples, language: None),
+            adapter_loader=lambda *_args, **_kwargs: lambda samples, language: None,
         )
 
 

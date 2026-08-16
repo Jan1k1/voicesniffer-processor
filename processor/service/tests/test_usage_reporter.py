@@ -288,6 +288,7 @@ def test_one_customer_cannot_spend_another_customers_rate_budget(
     data change, not a code change", and with a name-keyed window that data
     change would quietly throttle two strangers against each other.
     """
+
     def capped(tenant_key: str) -> dict:
         return {
             "server_id": "survival-1",
@@ -332,9 +333,7 @@ def test_a_break_glass_token_on_a_cloud_node_omits_the_tenant_key(
     assert "tenant_key" not in entry
 
 
-def test_the_report_matches_what_the_processor_actually_did(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_the_report_matches_what_the_processor_actually_did(tmp_path: Path, monkeypatch) -> None:
     api = FakeLicensingAPI()
     monkeypatch.setattr(urllib.request, "urlopen", api.urlopen)
     app = build_cloud_app(tmp_path)
@@ -473,9 +472,7 @@ def test_the_task_stops_when_the_application_does(tmp_path: Path, monkeypatch) -
     assert TASK_NAME not in task_names
 
 
-def test_starting_twice_does_not_leave_two_tasks_reporting(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_starting_twice_does_not_leave_two_tasks_reporting(tmp_path: Path, monkeypatch) -> None:
     # Two tasks on the same counters would report the same cumulative numbers
     # twice a minute, which the receiver reads as two of everything.
     api = FakeLicensingAPI()

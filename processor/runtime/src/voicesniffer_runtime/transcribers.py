@@ -434,8 +434,7 @@ def load_transcriber(
     if max_active_paths is None:
         max_active_paths = resolve_max_active_paths()
     elif (
-        isinstance(max_active_paths, bool)
-        or not 1 <= max_active_paths <= MAX_ACTIVE_PATHS_CEILING
+        isinstance(max_active_paths, bool) or not 1 <= max_active_paths <= MAX_ACTIVE_PATHS_CEILING
     ):
         raise ValueError(f"max_active_paths must be between 1 and {MAX_ACTIVE_PATHS_CEILING}")
     paths = {role: _model_file(model_dir, relative) for role, relative in spec.files.items()}

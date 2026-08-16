@@ -195,6 +195,7 @@ def test_two_tenants_sharing_a_server_name_never_share_a_verdict() -> None:
         async def speech_of(tenant: str):
             async def produce() -> str:
                 return f"{tenant} player said this"
+
             return produce
 
         first = await cache.execute(

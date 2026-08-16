@@ -106,9 +106,9 @@ def test_rate_limit_returns_429_with_retry_after(tmp_path: Path) -> None:
 
 
 def test_expired_license_gets_a_clear_error(tmp_path: Path) -> None:
-    expired = (
-        datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
-    ).isoformat(timespec="seconds")
+    expired = (datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)).isoformat(
+        timespec="seconds"
+    )
     app = build_app(tmp_path, languages=["en"], expires=expired)
 
     response = post(app, headers(), b"\x00\x01a")

@@ -319,8 +319,9 @@ def test_normalisation_is_skipped_for_silence() -> None:
     # decoder loud noise to hallucinate from.
     silence = np.full(1600, 0.0001, dtype=np.float32)
     assert np.array_equal(normalize_level(silence, 0.06), silence)
-    assert np.array_equal(normalize_level(np.zeros(1600, dtype=np.float32), 0.06),
-                          np.zeros(1600, dtype=np.float32))
+    assert np.array_equal(
+        normalize_level(np.zeros(1600, dtype=np.float32), 0.06), np.zeros(1600, dtype=np.float32)
+    )
 
 
 def test_the_quietest_real_speakers_are_still_amplified() -> None:
@@ -332,9 +333,7 @@ def test_the_quietest_real_speakers_are_still_amplified() -> None:
 
     lifted = normalize_level(very_quiet_speech, 0.06)
 
-    assert float(np.sqrt(np.mean(lifted**2))) > float(
-        np.sqrt(np.mean(very_quiet_speech**2))
-    )
+    assert float(np.sqrt(np.mean(lifted**2))) > float(np.sqrt(np.mean(very_quiet_speech**2)))
 
 
 def test_normalisation_gain_is_capped_and_never_clips() -> None:

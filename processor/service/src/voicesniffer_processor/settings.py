@@ -178,6 +178,7 @@ def _secret(values: Mapping[str, str], name: str) -> str:
             raise ValueError(f"{name}_FILE is set but unreadable: {error}") from error
     return values.get(name, "").strip()
 
+
 def _load_credentials(tokens_file: Path) -> Mapping[bytes, ServerCredential]:
     # Each failure gets its own message. The single "must contain a readable JSON
     # object" wrapped all of them, and the common case in practice is a
